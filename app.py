@@ -101,7 +101,7 @@ def analyse_supportnote(note):
 st.markdown(
     """
     <div style='text-align: center; margin-bottom: 20px;'>
-        <img src='moverLogotype_blue.png' style='max-width: 300px;' alt='Mover logo'>
+        <img src='moverLogotype_blue.png' style='max-width: 150px;' alt='Mover logo'>
     </div>
     """,
     unsafe_allow_html=True
