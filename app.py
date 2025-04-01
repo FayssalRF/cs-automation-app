@@ -125,7 +125,6 @@ if uploaded_file is not None:
             towrite = io.BytesIO()
             with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Analyseret')
-                writer.save()
             towrite.seek(0)
 
             st.download_button(
