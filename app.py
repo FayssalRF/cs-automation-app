@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med større tekst
+# Tilføj brugerdefineret CSS med større tekst og knap-stil
 st.markdown(
     """
     <style>
@@ -33,6 +33,7 @@ st.markdown(
         border-radius: 5px;
         cursor: pointer;
         font-size: 18px;
+        width: 100%;
     }
     .stFileUploader label {
         font-weight: bold;
@@ -43,7 +44,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Funktion: Controlling Report Analyzer
+# Definer funktioner for de forskellige sider
+
 def controlling_report_analyzer():
     st.header("Controlling Report Analyse")
     st.markdown("### Velkommen til appen til analyse af controlling rapporter")
@@ -59,7 +61,7 @@ def controlling_report_analyzer():
             st.error("Fejl ved indlæsning af fil: " + str(e))
             return
         
-        # Tjek for de nødvendige kolonner
+        # Tjek for nødvendige kolonner
         required_columns = [
             "SessionId", "Date", "CustomerId", "CustomerName", 
             "EstDuration", "ActDuration", "DurationDifference", "SupportNote"
@@ -76,7 +78,7 @@ def controlling_report_analyzer():
         if dropped_rows > 0:
             st.info(f"{dropped_rows} rækker blev droppet, da de manglede værdier i SupportNote eller CustomerName.")
         
-        # Fjern rækker, hvor CustomerName indeholder "IKEA NL"
+        # Fjern rækker med "IKEA NL" i CustomerName
         before_filter = len(df)
         df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
         filtered_rows = before_filter - len(df)
@@ -138,7 +140,7 @@ def controlling_report_analyzer():
             # Ekstra tid / Extra time nøgleord
             "ekstra tid", "ekstratid", "extra time", "extratime"
         ]
-        # Gør alle nøgleord små for case-insensitiv søgning
+        # Sørg for case-insensitiv søgning
         all_keywords = [kw.lower() for kw in all_keywords]
         
         def analyse_supportnote(note):
@@ -186,46 +188,46 @@ def controlling_report_analyzer():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-# Funktion: Solar Weekly Report (under udvikling)
 def solar_weekly_report():
     st.header("Solar Weekly Report")
     st.write("Denne fane er under udvikling.")
 
-# Funktion: Solar CO2 Report (under udvikling)
 def solar_co2_report():
     st.header("Solar CO2 Report")
     st.write("Denne fane er under udvikling.")
 
-# Funktion: Revenue analyser (under udvikling)
 def revenue_analyser():
     st.header("Revenue analyser")
     st.write("Denne fane er under udvikling.")
 
-# Navigation: Brug session_state til at holde styr på siden
+# Navigation med session_state
 if "page" not in st.session_state:
     st.session_state.page = "Home"
 
 if st.session_state.page == "Home":
-    # Forside
+    # Forside med titel og en vandret menu
     st.title("Customer Success Automation site")
     st.markdown("### Vælg et menupunkt:")
-    # Vis de 4 menupunkter som knapper
-    col1, col2 = st.columns(2)
-    col3, col4 = st.columns(2)
-    if st.button("Controlling Report Analyzer"):
-        st.session_state.page = "Controlling Report Analyzer"
-        st.experimental_rerun()
-    if st.button("Solar Weekly Report"):
-        st.session_state.page = "Solar Weekly Report"
-        st.experimental_rerun()
-    if st.button("Solar CO2 Report"):
-        st.session_state.page = "Solar CO2 Report"
-        st.experimental_rerun()
-    if st.button("Revenue analyser"):
-        st.session_state.page = "Revenue analyser"
-        st.experimental_rerun()
+    # Brug kolonner for at centrere menu-knapperne
+    cols = st.columns([1,2,2,2,2,1])
+    with cols[1]:
+        if st.button("Controlling Report Analyzer"):
+            st.session_state.page = "Controlling Report Analyzer"
+            st.experimental_rerun()
+    with cols[2]:
+        if st.button("Solar Weekly Report"):
+            st.session_state.page = "Solar Weekly Report"
+            st.experimental_rerun()
+    with cols[3]:
+        if st.button("Solar CO2 Report"):
+            st.session_state.page = "Solar CO2 Report"
+            st.experimental_rerun()
+    with cols[4]:
+        if st.button("Revenue analyser"):
+            st.session_state.page = "Revenue analyser"
+            st.experimental_rerun()
 else:
-    # Tilføj en knap for at vende tilbage til forside
+    # Tilbage-knap
     if st.button("Tilbage til forside"):
         st.session_state.page = "Home"
         st.experimental_rerun()
