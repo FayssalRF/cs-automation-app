@@ -168,6 +168,12 @@ if uploaded_file is not None:
             st.markdown("#### Analyserede Resultater - Uden ekstra tid (Nej):")
             df_no = df[df["Keywords"] == "Nej"]
             st.dataframe(df_no[output_cols])
+            
+            # Vis en liste over unikke CustomerName
+            unique_customers = sorted(df["CustomerName"].unique())
+            customer_list = "\n".join(["- " + str(customer) for customer in unique_customers])
+            st.markdown("#### Unikke Kunder:")
+            st.markdown(customer_list)
 
             # Gem dataframen som en samlet Excel-fil i hukommelsen
             towrite = io.BytesIO()
