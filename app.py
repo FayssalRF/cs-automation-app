@@ -113,7 +113,7 @@ if uploaded_file is not None:
                 # Udfordringer med kunden / Customer Issues
                 "kunden sur", "sur kunde", "kunden klager", "klager kunde", "afsender afviser", "afviser afsender", "modtager uenig",
                 "uening modtager", "problem med kunde", "kunde problem", "utilfreds kunde", "klage", "afvisning", "uenighed",
-                "problem med kunde",
+                "problem med kunde", "at vente på personale", "vente på personale",
                 "receiver refused", "refused receiver", "sender issue", "issue with sender", "customer complaint", "complaint from customer",
                 "customer upset", "upset customer", "problem with customer", "complaint", "refusal", "issue", "disagreement", "unhappy customer",
                 # Besværlig leveringsadresse / Difficult Delivery Location
