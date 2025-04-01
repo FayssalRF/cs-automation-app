@@ -12,7 +12,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med Open Sans, øget tekststørrelse og ekstra margin mellem fanepunkterne
+# Tilføj brugerdefineret CSS med Open Sans, øget tekststørrelse, ekstra margin mellem fanepunkterne,
+# og opdaterede knap-stilarter efter retningslinjerne (primære knapper med solid fill, f.eks. midnat blå,
+# med en rund form)
 st.markdown(
     """
     <style>
@@ -47,7 +49,7 @@ st.markdown(
         color: #333333 !important;
     }
     
-    /* Knapper - ændret til midnat blå (#191970) */
+    /* Primære knapper: Solid fill med midnat blå (#191970), hvid tekst og runde hjørner */
     .stButton>button {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
@@ -56,7 +58,7 @@ st.markdown(
         color: white;
         border: none;
         padding: 10px 24px;
-        border-radius: 5px;
+        border-radius: 25px;
         cursor: pointer;
     }
     
@@ -78,7 +80,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (placeret øverst til venstre)
+# Forsøg at indlæse logoet med PIL og vis det med st.image med en bredde på 300px (placeret øverst til venstre)
 try:
     logo = Image.open("moverLogotype_blue.png")
     st.image(logo, width=300)
@@ -189,7 +191,7 @@ with tabs[1]:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
-# Fanen: Solar Weekly Report – hent data fra datawarehouse-linket
+# Fanen: Solar Weekly Report – hent data fra datawarehouse-linket med bekræftelsesknap
 with tabs[2]:
     st.title("Solar Weekly Report")
     st.markdown("Vælg en periode (maks 7 dage) for rapporten:")
