@@ -2,11 +2,52 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.title("Controlling Report Analyse")
+# Konfigurer siden
+st.set_page_config(
+    page_title="Controlling Report Analyse",
+    page_icon=":bar_chart:",
+    layout="wide"
+)
 
-st.write(
+# Tilføj brugerdefineret CSS for at pifte udseendet op
+st.markdown(
     """
-    Upload din Excel-fil med controlling report. Filen skal indeholde følgende kolonner:
+    <style>
+    /* Baggrundsfarve for hovedindholdet */
+    .main {
+        background-color: #f7f7f7;
+    }
+    /* Ændrer stilen på titler */
+    h1, h2, h3 {
+        color: #333333;
+    }
+    /* Pynter på knappen og uploaderen */
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .stFileUploader label {
+        font-weight: bold;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Hovedtitel
+st.title("Controlling Report Analyse")
+st.markdown("### Velkommen til appen til analyse af controlling rapporter")
+st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord.")
+
+# Sidebjælke med uploadvejledning
+st.sidebar.header("Upload & Indstillinger")
+st.sidebar.write(
+    """
+    Upload din Excel-fil her. Filen skal indeholde følgende kolonner:
     - SessionId
     - Date
     - CustomerId
@@ -15,8 +56,6 @@ st.write(
     - ActDuration
     - DurationDifference
     - SupportNote
-
-    Applikationen analyserer "SupportNote" for nøgleord, der indikerer ekstra tid.
     """
 )
 
@@ -39,7 +78,9 @@ if uploaded_file is not None:
         if missing:
             st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing))
         else:
-            # Definer alle nøgleord for at identificere ekstra tid (Dansk og Engelsk)
+            st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
+            
+            # Definer alle nøgleord for at identificere ekstra tid (både dansk og engelsk)
             all_keywords = [
                 # Trafikproblemer / Traffic Problems
                 "trafikale problemer", "kø på vejen", "vejen lukket", "lukket vej", "lukkede veje", "langsom trafik", "trafik langsom",
@@ -90,7 +131,7 @@ if uploaded_file is not None:
                 "hard to find", "delivery challenge", "hospital", "school", "mall", "apartment building", "no parking",
                 "complicated delivery", "difficult address", "busy area"
             ]
-            # Gør alle nøgleord små bogstaver for at sikre case-insensitiv søgning
+            # Gør alle nøgleord små bogstaver for case-insensitiv søgning
             all_keywords = [kw.lower() for kw in all_keywords]
 
             # Funktion til at analysere supportnote
@@ -98,10 +139,8 @@ if uploaded_file is not None:
                 if pd.isna(note):
                     return "Nej", ""
                 note_lower = str(note).lower()
-                # Find alle nøgleord, der optræder i supportnoten
                 matched = [kw for kw in all_keywords if kw in note_lower]
                 if matched:
-                    # Fjern eventuelle dubletter
                     matched = list(set(matched))
                     return "Ja", ", ".join(matched)
                 else:
@@ -118,7 +157,7 @@ if uploaded_file is not None:
                 "Keywords", "MatchingKeyword"
             ]
 
-            st.write("Resultater:")
+            st.markdown("#### Analyserede Resultater:")
             st.dataframe(df[output_cols])
 
             # Konverter dataframen til en Excel-fil i hukommelsen
