@@ -1,0 +1,235 @@
+trafikale problemer
+kø på vejen
+vejen lukket
+lukket vej
+lukkede veje
+langsom trafik
+trafik langsom
+road closed
+closed road
+heavy traffic
+traffic jam
+detour
+roadwork
+trafikprop
+vejarbejde
+trafik
+ventetid ved afhentning
+forsinket lager
+lageret ikke klar
+afsender ikke klar
+florist åbnede senere
+florist forsinket
+forsinket florist
+butikken ikke åben
+ikke åben butik
+ventetid
+forsinkelse
+ikke klar
+åbnede senere
+forsinket
+waiting at location
+sender delayed
+florist not ready
+pickup delay
+no one at pickup
+delayed florist
+waiting
+delay
+not ready
+opened late
+delayed
+tilføjet ekstra stop
+ekstra stop tilføjet
+ændret rækkefølge
+rækkefølge ændret
+stop fjernet
+fjernet stop
+ændret rute
+rute ændret
+stop omrokeret
+omrokeret stop
+ekstra leverance
+leverance tilføjet
+ændring
+ekstra stop
+ekstra leverance
+ruteændring
+omrokering
+changed route
+route changed
+extra stop
+stop added
+stop removed
+removed stop
+stop rearranged
+rearranged stop
+additional delivery
+delivery added
+change
+extra stop
+additional delivery
+route change
+rearrangement
+ingen svarer
+svarer ingen
+modtager ikke hjemme
+ikke hjemme modtager
+kunden ikke hjemme
+ikke hjemme kunde
+kunden tager ikke telefon
+tager ikke telefon kunde
+kunde ikke kontaktbar
+ikke kontaktbar kunde
+modtager
+ikke hjemme
+ingen svar
+ingen kontakt
+ikke kontaktbar
+receiver not present
+not present receiver
+no answer
+answer not received
+not home
+home not
+unanswered call
+call unanswered
+customer not reachable
+not reachable customer
+receiver
+not home
+no answer
+no contact
+unreachable
+forkert vejnavn
+vejnavn forkert
+forkert husnummer
+husnummer forkert
+forkert postnummer
+postnummer forkert
+kunne ikke finde adressen
+adressen kunne ikke findes
+ikke på adressen
+adressen ikke fundet
+adressen findes ikke
+forkert adresse
+forkert placering
+ukendt adresse
+fejl i adresse
+adresseproblem
+wrong address
+address wrong
+wrong street
+street wrong
+wrong house number
+house number wrong
+wrong postal code
+postal code wrong
+could not find address
+address not found
+not at address
+location not found
+location mismatch
+mismatch location
+wrong address
+unknown location
+address error
+location mismatch
+address issue
+porten lukket
+lukket port
+ingen adgang
+adgang nægtet
+nægtet adgang
+adgang kræver nøgle
+nøgle kræves for adgang
+adgang via alarm
+alarmstyret adgang
+kunne ikke komme ind
+kom ikke ind
+adgang
+ingen adgang
+adgang nægtet
+låst
+forhindret adgang
+port lukket
+no access
+access denied
+denied access
+locked gate
+gate locked
+restricted area
+entrance blocked
+blocked entrance
+could not enter
+entry failed
+no access
+locked
+denied
+blocked
+restricted
+access issue
+kunden sur
+sur kunde
+kunden klager
+klager kunde
+afsender afviser
+afviser afsender
+modtager uenig
+uening modtager
+problem med kunde
+kunde problem
+utilfreds kunde
+klage
+afvisning
+uenighed
+problem med kunde
+receiver refused
+refused receiver
+sender issue
+issue with sender
+customer complaint
+complaint from customer
+customer upset
+upset customer
+problem with customer
+complaint
+refusal
+issue
+disagreement
+unhappy customer
+hospital
+skole
+center
+gågade
+etageejendom
+manglende parkering
+parkering mangler
+svært at finde
+vanskelig at finde
+besværlig levering
+tricky adresse
+svær placering
+ingen parkering
+trafikeret område
+tæt trafik
+busy location
+location busy
+pedestrian zone
+no parking
+parking unavailable
+difficult to find
+hard to find
+delivery challenge
+hospital
+school
+mall
+apartment building
+no parking
+complicated delivery
+difficult address
+busy area
+ekstra tid
+ekstratid
+extra time
+extratime
