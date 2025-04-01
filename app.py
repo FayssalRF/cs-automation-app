@@ -78,10 +78,11 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (øverst til venstre)
+# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (placeres øverst til venstre)
 try:
     logo = Image.open("moverLogotype_blue.png")
     st.image(logo, width=300)
+    # Tilføj ekstra afstand mellem logoet og fanebjælken
     st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 except Exception as e:
     st.error("Fejl ved indlæsning af logo: " + str(e))
@@ -94,6 +95,7 @@ except Exception as e:
     st.error("Fejl ved indlæsning af keywords: " + str(e))
     all_keywords = []
 
+# Sørg for, at alle keywords er i små bogstaver for case-insensitiv søgning
 all_keywords = [kw.lower() for kw in all_keywords]
 
 def analyse_supportnote(note):
@@ -115,7 +117,7 @@ with tabs[0]:
     st.markdown("<div style='text-align: center;'><h1>Customer Success Automation site</h1></div>", unsafe_allow_html=True)
     st.markdown("<div style='text-align: center;'><p>vælg et menupunkt i fanebjælken ovenfor for at komme videre.</p></div>", unsafe_allow_html=True)
 
-# Fanen: Controlling Report Analyzer (beholder den oprindelige funktionalitet)
+# Fanen: Controlling Report Analyzer
 with tabs[1]:
     st.title("Controlling Report Analyse")
     st.markdown("### Velkommen til appen til analyse af controlling rapporter")
@@ -126,7 +128,7 @@ with tabs[1]:
     
     if uploaded_file is not None:
         try:
-            df = pd.read_excel(uploaded_file)
+            df = pd.read_excel(uploaded_file, engine='openpyxl')
         except Exception as e:
             st.error("Fejl ved indlæsning af fil: " + str(e))
             df = None
@@ -188,7 +190,7 @@ with tabs[1]:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
-# Fanen: Solar Weekly Report – hent data automatisk fra datawarehouse-linket
+# Fanen: Solar Weekly Report – hent data fra datawarehouse-linket
 with tabs[2]:
     st.title("Solar Weekly Report")
     st.markdown("Vælg en periode (maks 7 dage) for rapporten:")
@@ -206,9 +208,8 @@ with tabs[2]:
         try:
             response = requests.get(url)
             response.raise_for_status()
-            # Læs Excel-data fra den hentede fil
-            df_sw = pd.read_excel(io.BytesIO(response.content))
-            # Sørg for, at de nødvendige kolonner er til stede
+            # Læs Excel-data med openpyxl engine
+            df_sw = pd.read_excel(io.BytesIO(response.content), engine='openpyxl')
             required_columns_sw = ["Booking ref.", "Date", "Route ID", "Pick up adress", "Vehicle type", "Delivery adress", "Delivery zipcode", "Booking to Mover", "Pickup arrival", "Pickup completed", "Delivery completed"]
             missing_sw = [col for col in required_columns_sw if col not in df_sw.columns]
             if missing_sw:
