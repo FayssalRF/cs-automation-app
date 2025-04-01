@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med opdateret typography
+# Tilføj brugerdefineret CSS med opdateret typography og ekstra mellemrum mellem fanepunkterne
 st.markdown(
     """
     <style>
@@ -24,7 +24,7 @@ st.markdown(
         color: #000 !important;
     }
     
-    /* Headings: Brug Open Sans, Regular, med lidt større fontstørrelser og en primær farve (#333333) */
+    /* Headings: Brug Open Sans, Regular, med større fontstørrelser og en primær farve (#333333) */
     h1 {
         font-family: 'Open Sans', sans-serif;
         font-size: 3em !important;
@@ -57,13 +57,18 @@ st.markdown(
         cursor: pointer;
     }
     
-    /* Labels (fx fra fil-uploader) - skal vises i lower case og med en teal farve */
+    /* Labels (f.eks. fra fil-uploader) - lower case og teal farve */
     .stFileUploader label {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
         font-weight: 400 !important;
         text-transform: lowercase;
         color: #008080 !important;
+    }
+    
+    /* Ekstra mellemrum mellem fanepunkterne */
+    [data-baseweb="tab"] {
+        margin-right: 20px !important;
     }
     </style>
     """,
