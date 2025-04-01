@@ -76,10 +76,12 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (default er top venstre)
+# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px
 try:
     logo = Image.open("moverLogotype_blue.png")
     st.image(logo, width=300)
+    # Tilføj ekstra afstand mellem logoet og fanebjælken
+    st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 except Exception as e:
     st.error("Fejl ved indlæsning af logo: " + str(e))
 
@@ -156,51 +158,3 @@ with tabs[1]:
                 st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
                 
                 # Anvend analysen på SupportNote
-                df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
-                df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
-                
-                output_cols = [
-                    "SessionId", "Date", "CustomerId", "CustomerName", 
-                    "EstDuration", "ActDuration", "DurationDifference", "SupportNote", 
-                    "Keywords", "MatchingKeyword"
-                ]
-                
-                st.markdown("#### Analyserede Resultater - Med ekstra tid (Ja):")
-                df_yes = df[df["Keywords"] == "Ja"]
-                st.dataframe(df_yes[output_cols])
-                
-                st.markdown("#### Analyserede Resultater - Uden ekstra tid (Nej):")
-                df_no = df[df["Keywords"] == "Nej"]
-                st.dataframe(df_no[output_cols])
-                
-                unique_customers = sorted(df["CustomerName"].unique())
-                customer_list = "\n".join(["- " + str(customer) for customer in unique_customers])
-                st.markdown("#### Unikke Kunder:")
-                st.markdown(customer_list)
-                
-                towrite = io.BytesIO()
-                with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
-                    df.to_excel(writer, index=False, sheet_name='Analyseret')
-                towrite.seek(0)
-                
-                st.download_button(
-                    label="Download analyseret Excel-fil",
-                    data=towrite,
-                    file_name="analyseret_controlling_report.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-
-# Fanen: Solar Weekly Report
-with tabs[2]:
-    st.title("Solar Weekly Report")
-    st.write("Denne fane er under udvikling.")
-
-# Fanen: Solar CO2 Report
-with tabs[3]:
-    st.title("Solar CO2 Report")
-    st.write("Denne fane er under udvikling.")
-
-# Fanen: Revenue analyser
-with tabs[4]:
-    st.title("Revenue analyser")
-    st.write("Denne fane er under udvikling.")
