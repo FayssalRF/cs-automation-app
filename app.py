@@ -9,17 +9,23 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS for et flot udseende
+# Tilføj brugerdefineret CSS for et flot udseende med større tekst
 st.markdown(
     """
     <style>
-    /* Baggrundsfarve for hovedindholdet */
-    .main {
-        background-color: #f7f7f7;
+    /* Øg basis tekststørrelsen */
+    body, .main, p, li, .stMarkdown {
+        font-size: 18px !important;
     }
-    /* Ændrer stilen på titler */
-    h1, h2, h3 {
-        color: #333333;
+    /* Ændrer stilen på titler med større tekst */
+    h1 {
+        font-size: 3em !important;
+    }
+    h2 {
+        font-size: 2.5em !important;
+    }
+    h3 {
+        font-size: 2em !important;
     }
     /* Stil på knapper */
     .stButton>button {
@@ -29,9 +35,11 @@ st.markdown(
         padding: 10px 24px;
         border-radius: 5px;
         cursor: pointer;
+        font-size: 18px;
     }
     .stFileUploader label {
         font-weight: bold;
+        font-size: 18px;
     }
     </style>
     """,
