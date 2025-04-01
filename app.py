@@ -9,37 +9,61 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med større tekst
+# Tilføj brugerdefineret CSS med opdateret typography
 st.markdown(
     """
     <style>
-    /* Øg basis tekststørrelsen */
+    /* Importér Open Sans fra Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
+    
+    /* Anvend Open Sans, Regular, minimum 16pt for alle paragraffer og lister */
     body, .main, p, li, .stMarkdown {
-        font-size: 18px !important;
+        font-family: 'Open Sans', sans-serif;
+        font-size: 16pt !important;
+        font-weight: 400 !important;
+        color: #000 !important;
     }
-    /* Ændrer stilen på titler med større tekst */
+    
+    /* Headings: Brug Open Sans, Regular, med lidt større fontstørrelser og en primær farve (#333333) */
     h1 {
+        font-family: 'Open Sans', sans-serif;
         font-size: 3em !important;
+        font-weight: 400 !important;
+        color: #333333 !important;
     }
     h2 {
+        font-family: 'Open Sans', sans-serif;
         font-size: 2.5em !important;
+        font-weight: 400 !important;
+        color: #333333 !important;
     }
     h3 {
+        font-family: 'Open Sans', sans-serif;
         font-size: 2em !important;
+        font-weight: 400 !important;
+        color: #333333 !important;
     }
-    /* Stil på knapper */
+    
+    /* Knapper */
     .stButton>button {
+        font-family: 'Open Sans', sans-serif;
+        font-size: 16pt !important;
+        font-weight: 400 !important;
         background-color: #4CAF50;
         color: white;
         border: none;
         padding: 10px 24px;
         border-radius: 5px;
         cursor: pointer;
-        font-size: 18px;
     }
+    
+    /* Labels (fx fra fil-uploader) - skal vises i lower case og med en teal farve */
     .stFileUploader label {
-        font-weight: bold;
-        font-size: 18px;
+        font-family: 'Open Sans', sans-serif;
+        font-size: 16pt !important;
+        font-weight: 400 !important;
+        text-transform: lowercase;
+        color: #008080 !important;
     }
     </style>
     """,
@@ -52,8 +76,7 @@ tabs = st.tabs(["Forside", "Controlling Report Analyzer", "Solar Weekly Report",
 # Fanen: Forside
 with tabs[0]:
     st.markdown("<div style='text-align: center;'><h1>Customer Success Automation site</h1></div>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center;'><h2>Velkommen!</h2></div>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center;'><p>Vælg et menupunkt i fanebjælken ovenfor for at komme videre.</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center;'><p>vælg et menupunkt i fanebjælken ovenfor for at komme videre.</p></div>", unsafe_allow_html=True)
 
 # Fanen: Controlling Report Analyzer
 with tabs[1]:
@@ -62,6 +85,7 @@ with tabs[1]:
     st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
     st.write("- SessionId, Date, CustomerId, CustomerName, EstDuration, ActDuration, DurationDifference, SupportNote")
     
+    # Filupload
     uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"])
     
     if uploaded_file is not None:
@@ -72,6 +96,7 @@ with tabs[1]:
             df = None
         
         if df is not None:
+            # Tjek om alle nødvendige kolonner er til stede
             required_columns = [
                 "SessionId", "Date", "CustomerId", "CustomerName", 
                 "EstDuration", "ActDuration", "DurationDifference", "SupportNote"
@@ -80,12 +105,14 @@ with tabs[1]:
             if missing:
                 st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing))
             else:
+                # Fjern rækker med tomme celler i SupportNote eller CustomerName
                 initial_rows = len(df)
                 df = df.dropna(subset=["SupportNote", "CustomerName"])
                 dropped_rows = initial_rows - len(df)
                 if dropped_rows > 0:
                     st.info(f"{dropped_rows} rækker blev droppet, da de manglede værdier i SupportNote eller CustomerName.")
                 
+                # Fjern rækker, hvor CustomerName indeholder "IKEA NL"
                 before_filter = len(df)
                 df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
                 filtered_rows = before_filter - len(df)
@@ -94,7 +121,7 @@ with tabs[1]:
                 
                 st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
                 
-                # Definer nøgleord (inkl. ekstra tid) – både dansk og engelsk
+                # Definer alle nøgleord for at identificere ekstra tid (både dansk og engelsk)
                 all_keywords = [
                     "trafikale problemer", "kø på vejen", "vejen lukket", "lukket vej", "lukkede veje", "langsom trafik", "trafik langsom",
                     "road closed", "closed road", "heavy traffic", "traffic jam", "detour", "roadwork", "trafikprop", "vejarbejde", "trafik",
