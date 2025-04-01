@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 import io
+import requests
 from PIL import Image
+from datetime import date
 
 # Konfigurer siden
 st.set_page_config(
@@ -76,7 +78,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (placeres øverst til venstre)
+# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (øverst til venstre)
 try:
     logo = Image.open("moverLogotype_blue.png")
     st.image(logo, width=300)
@@ -92,7 +94,6 @@ except Exception as e:
     st.error("Fejl ved indlæsning af keywords: " + str(e))
     all_keywords = []
 
-# Sørg for, at alle keywords er i små bogstaver for case-insensitiv søgning
 all_keywords = [kw.lower() for kw in all_keywords]
 
 def analyse_supportnote(note):
@@ -114,14 +115,13 @@ with tabs[0]:
     st.markdown("<div style='text-align: center;'><h1>Customer Success Automation site</h1></div>", unsafe_allow_html=True)
     st.markdown("<div style='text-align: center;'><p>vælg et menupunkt i fanebjælken ovenfor for at komme videre.</p></div>", unsafe_allow_html=True)
 
-# Fanen: Controlling Report Analyzer
+# Fanen: Controlling Report Analyzer (beholder den oprindelige funktionalitet)
 with tabs[1]:
     st.title("Controlling Report Analyse")
     st.markdown("### Velkommen til appen til analyse af controlling rapporter")
     st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
     st.write("- SessionId, Date, CustomerId, CustomerName, EstDuration, ActDuration, DurationDifference, SupportNote")
     
-    # Filupload
     uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"], key="controlling")
     
     if uploaded_file is not None:
@@ -188,29 +188,34 @@ with tabs[1]:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
-# Fanen: Solar Weekly Report
+# Fanen: Solar Weekly Report – hent data automatisk fra datawarehouse-linket
 with tabs[2]:
     st.title("Solar Weekly Report")
-    st.markdown("Upload en Excel-fil med data til Solar Weekly Report. Filen skal indeholde følgende kolonner:")
-    st.write("- Booking ref., Date, Route ID, Pick up adress, Vehicle type, Delivery adress, Delivery zipcode, Booking to Mover, Pickup arrival, Pickup completed, Delivery completed")
+    st.markdown("Vælg en periode (maks 7 dage) for rapporten:")
+    from_date = st.date_input("Fra dato", value=date(2025, 1, 1), key="from_date")
+    to_date = st.date_input("Til dato", value=date(2025, 1, 7), key="to_date")
     
-    uploaded_file_sw = st.file_uploader("Vælg Excel-fil til Solar Weekly Report", type=["xlsx", "xls"], key="solar_weekly")
-    
-    if uploaded_file_sw is not None:
+    if to_date < from_date:
+        st.error("Til dato skal være efter fra dato!")
+    elif (to_date - from_date).days > 7:
+        st.error("Perioden må ikke være mere end 7 dage!")
+    else:
+        # Konstruer URL’en med de valgte datoer
+        url = f"https://moverdatawarehouse.azurewebsites.net/download/routestats?apikey=b48c55&Userid=6016&FromDate={from_date.strftime('%Y-%m-%d')}&ToDate={to_date.strftime('%Y-%m-%d')}"
+        st.info("Henter rapport fra: " + url)
         try:
-            df_sw = pd.read_excel(uploaded_file_sw)
-        except Exception as e:
-            st.error("Fejl ved indlæsning af fil: " + str(e))
-            df_sw = None
-        
-        if df_sw is not None:
+            response = requests.get(url)
+            response.raise_for_status()
+            # Læs Excel-data fra den hentede fil
+            df_sw = pd.read_excel(io.BytesIO(response.content))
+            # Sørg for, at de nødvendige kolonner er til stede
             required_columns_sw = ["Booking ref.", "Date", "Route ID", "Pick up adress", "Vehicle type", "Delivery adress", "Delivery zipcode", "Booking to Mover", "Pickup arrival", "Pickup completed", "Delivery completed"]
             missing_sw = [col for col in required_columns_sw if col not in df_sw.columns]
             if missing_sw:
-                st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing_sw))
+                st.error("Følgende nødvendige kolonner mangler i rapporten: " + ", ".join(missing_sw))
             else:
                 df_final_sw = df_sw[required_columns_sw]
-                st.success("Filen er uploadet korrekt, og Solar Weekly Report er udarbejdet!")
+                st.success("Rapporten er hentet!")
                 st.dataframe(df_final_sw)
                 
                 towrite_sw = io.BytesIO()
@@ -224,6 +229,8 @@ with tabs[2]:
                     file_name="solar_weekly_report.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+        except Exception as e:
+            st.error("Fejl ved hentning af rapport: " + str(e))
 
 # Fanen: Solar CO2 Report
 with tabs[3]:
