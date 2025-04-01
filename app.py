@@ -47,12 +47,12 @@ st.markdown(
         color: #333333 !important;
     }
     
-    /* Knapper */
+    /* Knapper - ændret til midnat blå (#191970) */
     .stButton>button {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
         font-weight: 400 !important;
-        background-color: #4CAF50;
+        background-color: #191970;
         color: white;
         border: none;
         padding: 10px 24px;
@@ -202,13 +202,11 @@ with tabs[2]:
         elif (to_date - from_date).days > 7:
             st.error("Perioden må ikke være mere end 7 dage!")
         else:
-            # Konstruer URL’en med de valgte datoer
             url = f"https://moverdatawarehouse.azurewebsites.net/download/routestats?apikey=b48c55&Userid=6016&FromDate={from_date.strftime('%Y-%m-%d')}&ToDate={to_date.strftime('%Y-%m-%d')}"
             st.info("Henter rapport fra: " + url)
             try:
                 response = requests.get(url)
                 response.raise_for_status()
-                # Læs Excel-data med openpyxl engine
                 df_sw = pd.read_excel(io.BytesIO(response.content), engine='openpyxl')
                 required_columns_sw = ["Booking ref.", "Date", "Route ID", "Pick up adress", "Vehicle type", "Delivery adress", "Delivery zipcode", "Booking to Mover", "Pickup arrival", "Pickup completed", "Delivery completed"]
                 missing_sw = [col for col in required_columns_sw if col not in df_sw.columns]
