@@ -122,7 +122,9 @@ if uploaded_file is not None:
                 "tæt trafik",
                 "busy location", "location busy", "pedestrian zone", "no parking", "parking unavailable", "difficult to find",
                 "hard to find", "delivery challenge", "hospital", "school", "mall", "apartment building", "no parking",
-                "complicated delivery", "difficult address", "busy area"
+                "complicated delivery", "difficult address", "busy area",
+                # Ekstra tid / Extra time nøgleord
+                "ekstra tid", "ekstratid", "extra time", "extratime"
             ]
             # Gør alle nøgleord små for at sikre case-insensitiv søgning
             all_keywords = [kw.lower() for kw in all_keywords]
