@@ -63,6 +63,13 @@ if uploaded_file is not None:
         if missing:
             st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing))
         else:
+            # Fjern rækker med tomme celler i SupportNote eller CustomerName
+            initial_rows = len(df)
+            df = df.dropna(subset=["SupportNote", "CustomerName"])
+            dropped_rows = initial_rows - len(df)
+            if dropped_rows > 0:
+                st.info(f"{dropped_rows} rækker blev droppet, da de manglede værdier i SupportNote eller CustomerName.")
+            
             st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
             
             # Definer alle nøgleord for at identificere ekstra tid (både dansk og engelsk)
@@ -107,7 +114,7 @@ if uploaded_file is not None:
                 "uening modtager", "problem med kunde", "kunde problem", "utilfreds kunde", "klage", "afvisning", "uenighed",
                 "problem med kunde",
                 "receiver refused", "refused receiver", "sender issue", "issue with sender", "customer complaint", "complaint from customer",
-                "customer upset", "upset customer", "problem with customer", "complaint", "refusal", "issue", "disagreement", "unhappy customer",
+                "customer upset", "upset customer", "problem med kunde", "complaint", "refusal", "issue", "disagreement", "unhappy customer",
                 # Besværlig leveringsadresse / Difficult Delivery Location
                 "hospital", "skole", "center", "gågade", "etageejendom", "manglende parkering", "parkering mangler", "svært at finde",
                 "vanskelig at finde", "besværlig levering", "tricky adresse", "svær placering", "ingen parkering", "trafikeret område",
@@ -135,6 +142,7 @@ if uploaded_file is not None:
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
 
+            # Udvælg de ønskede kolonner til output
             output_cols = [
                 "SessionId", "Date", "CustomerId", "CustomerName", 
                 "EstDuration", "ActDuration", "DurationDifference", "SupportNote", 
