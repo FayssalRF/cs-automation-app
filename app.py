@@ -76,13 +76,12 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL
+# Forsøg at indlæse logoet med PIL og centrer det med en kolonneopsætning
 try:
     logo = Image.open("moverLogotype_blue.png")
-    # Brug HTML for at centrere logoet
-    st.markdown("<div style='display: flex; justify-content: center; margin-bottom: 20px;'>", unsafe_allow_html=True)
-    st.image(logo, width=300)
-    st.markdown("</div>", unsafe_allow_html=True)
+    cols = st.columns([1, 3, 1])
+    with cols[1]:
+        st.image(logo, width=300)
 except Exception as e:
     st.error("Fejl ved indlæsning af logo: " + str(e))
 
