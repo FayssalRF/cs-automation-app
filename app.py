@@ -76,11 +76,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px
+# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (placeres øverst til venstre)
 try:
     logo = Image.open("moverLogotype_blue.png")
     st.image(logo, width=300)
-    # Tilføj ekstra afstand mellem logoet og fanebjælken
     st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 except Exception as e:
     st.error("Fejl ved indlæsning af logo: " + str(e))
@@ -123,7 +122,7 @@ with tabs[1]:
     st.write("- SessionId, Date, CustomerId, CustomerName, EstDuration, ActDuration, DurationDifference, SupportNote")
     
     # Filupload
-    uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"])
+    uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"], key="controlling")
     
     if uploaded_file is not None:
         try:
@@ -141,14 +140,12 @@ with tabs[1]:
             if missing:
                 st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing))
             else:
-                # Fjern rækker med tomme celler i SupportNote eller CustomerName
                 initial_rows = len(df)
                 df = df.dropna(subset=["SupportNote", "CustomerName"])
                 dropped_rows = initial_rows - len(df)
                 if dropped_rows > 0:
                     st.info(f"{dropped_rows} rækker blev droppet, da de manglede værdier i SupportNote eller CustomerName.")
                 
-                # Fjern rækker, hvor CustomerName indeholder "IKEA NL"
                 before_filter = len(df)
                 df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
                 filtered_rows = before_filter - len(df)
@@ -157,4 +154,83 @@ with tabs[1]:
                 
                 st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
                 
-                # Anvend analysen på SupportNote
+                df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
+                df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
+                
+                output_cols = [
+                    "SessionId", "Date", "CustomerId", "CustomerName", 
+                    "EstDuration", "ActDuration", "DurationDifference", "SupportNote", 
+                    "Keywords", "MatchingKeyword"
+                ]
+                
+                st.markdown("#### Analyserede Resultater - Med ekstra tid (Ja):")
+                df_yes = df[df["Keywords"] == "Ja"]
+                st.dataframe(df_yes[output_cols])
+                
+                st.markdown("#### Analyserede Resultater - Uden ekstra tid (Nej):")
+                df_no = df[df["Keywords"] == "Nej"]
+                st.dataframe(df_no[output_cols])
+                
+                unique_customers = sorted(df["CustomerName"].unique())
+                customer_list = "\n".join(["- " + str(customer) for customer in unique_customers])
+                st.markdown("#### Unikke Kunder:")
+                st.markdown(customer_list)
+                
+                towrite = io.BytesIO()
+                with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
+                    df.to_excel(writer, index=False, sheet_name='Analyseret')
+                towrite.seek(0)
+                
+                st.download_button(
+                    label="Download analyseret Excel-fil",
+                    data=towrite,
+                    file_name="analyseret_controlling_report.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+
+# Fanen: Solar Weekly Report
+with tabs[2]:
+    st.title("Solar Weekly Report")
+    st.markdown("Upload en Excel-fil med data til Solar Weekly Report. Filen skal indeholde følgende kolonner:")
+    st.write("- Booking ref., Date, Route ID, Pick up adress, Vehicle type, Delivery adress, Delivery zipcode, Booking to Mover, Pickup arrival, Pickup completed, Delivery completed")
+    
+    uploaded_file_sw = st.file_uploader("Vælg Excel-fil til Solar Weekly Report", type=["xlsx", "xls"], key="solar_weekly")
+    
+    if uploaded_file_sw is not None:
+        try:
+            df_sw = pd.read_excel(uploaded_file_sw)
+        except Exception as e:
+            st.error("Fejl ved indlæsning af fil: " + str(e))
+            df_sw = None
+        
+        if df_sw is not None:
+            required_columns_sw = ["Booking ref.", "Date", "Route ID", "Pick up adress", "Vehicle type", "Delivery adress", "Delivery zipcode", "Booking to Mover", "Pickup arrival", "Pickup completed", "Delivery completed"]
+            missing_sw = [col for col in required_columns_sw if col not in df_sw.columns]
+            if missing_sw:
+                st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing_sw))
+            else:
+                df_final_sw = df_sw[required_columns_sw]
+                st.success("Filen er uploadet korrekt, og Solar Weekly Report er udarbejdet!")
+                st.dataframe(df_final_sw)
+                
+                towrite_sw = io.BytesIO()
+                with pd.ExcelWriter(towrite_sw, engine='xlsxwriter') as writer:
+                    df_final_sw.to_excel(writer, index=False, sheet_name='SolarWeeklyReport')
+                towrite_sw.seek(0)
+                
+                st.download_button(
+                    label="Download Solar Weekly Report",
+                    data=towrite_sw,
+                    file_name="solar_weekly_report.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+
+# Fanen: Solar CO2 Report
+with tabs[3]:
+    st.title("Solar CO2 Report")
+    st.write("Denne fane er under udvikling.")
+
+# Fanen: Revenue analyser
+with tabs[4]:
+    st.title("Revenue analyser")
+    st.write("Denne fane er under udvikling.")
