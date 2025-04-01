@@ -12,9 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med Open Sans, øget tekststørrelse, ekstra margin mellem fanepunkterne,
-# og opdaterede knap-stilarter efter retningslinjerne (primære knapper med solid fill, f.eks. midnat blå,
-# med en rund form)
+# Tilføj brugerdefineret CSS med opdaterede knap-stilarter (tekst på knappen er hvid)
 st.markdown(
     """
     <style>
@@ -55,7 +53,7 @@ st.markdown(
         font-size: 16pt !important;
         font-weight: 400 !important;
         background-color: #191970;
-        color: white;
+        color: white !important;
         border: none;
         padding: 10px 24px;
         border-radius: 25px;
