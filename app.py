@@ -38,26 +38,11 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Hovedtitel
+# Hovedtitel og introduktion
 st.title("Controlling Report Analyse")
 st.markdown("### Velkommen til appen til analyse af controlling rapporter")
-st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord.")
-
-# Sidebjælke med uploadvejledning
-st.sidebar.header("Upload & Indstillinger")
-st.sidebar.write(
-    """
-    Upload din Excel-fil her. Filen skal indeholde følgende kolonner:
-    - SessionId
-    - Date
-    - CustomerId
-    - CustomerName
-    - EstDuration
-    - ActDuration
-    - DurationDifference
-    - SupportNote
-    """
-)
+st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
+st.write("- SessionId, Date, CustomerId, CustomerName, EstDuration, ActDuration, DurationDifference, SupportNote")
 
 uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"])
 
@@ -131,7 +116,7 @@ if uploaded_file is not None:
                 "hard to find", "delivery challenge", "hospital", "school", "mall", "apartment building", "no parking",
                 "complicated delivery", "difficult address", "busy area"
             ]
-            # Gør alle nøgleord små bogstaver for case-insensitiv søgning
+            # Gør alle nøgleord små for case-insensitiv søgning
             all_keywords = [kw.lower() for kw in all_keywords]
 
             # Funktion til at analysere supportnote
@@ -146,11 +131,10 @@ if uploaded_file is not None:
                 else:
                     return "Nej", ""
 
-            # Anvend analysen på hver række i dataframen
+            # Anvend analysen på hver række
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
 
-            # Udvælg de ønskede kolonner til output
             output_cols = [
                 "SessionId", "Date", "CustomerId", "CustomerName", 
                 "EstDuration", "ActDuration", "DurationDifference", "SupportNote", 
@@ -160,7 +144,7 @@ if uploaded_file is not None:
             st.markdown("#### Analyserede Resultater:")
             st.dataframe(df[output_cols])
 
-            # Konverter dataframen til en Excel-fil i hukommelsen
+            # Gem dataframen som en Excel-fil i hukommelsen
             towrite = io.BytesIO()
             with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Analyseret')
