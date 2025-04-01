@@ -97,6 +97,16 @@ def analyse_supportnote(note):
     else:
         return "Nej", ""
 
+# Vis logo øverst i midten
+st.markdown(
+    """
+    <div style='text-align: center; margin-bottom: 20px;'>
+        <img src='moverLogotype_blue.png' style='max-width: 300px;' alt='Mover logo'>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 # Opret fanebjælke med 5 faner: Forside, Controlling Report Analyzer, Solar Weekly Report, Solar CO2 Report, Revenue analyser
 tabs = st.tabs(["Forside", "Controlling Report Analyzer", "Solar Weekly Report", "Solar CO2 Report", "Revenue analyser"])
 
