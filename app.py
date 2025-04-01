@@ -71,6 +71,13 @@ if uploaded_file is not None:
             if dropped_rows > 0:
                 st.info(f"{dropped_rows} rækker blev droppet, da de manglede værdier i SupportNote eller CustomerName.")
             
+            # Fjern rækker, hvor CustomerName indeholder "IKEA NL"
+            before_filter = len(df)
+            df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
+            filtered_rows = before_filter - len(df)
+            if filtered_rows > 0:
+                st.info(f"{filtered_rows} rækker blev droppet, da de indeholdt 'IKEA NL' i CustomerName.")
+            
             st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
             
             # Definer alle nøgleord for at identificere ekstra tid (både dansk og engelsk)
@@ -113,7 +120,7 @@ if uploaded_file is not None:
                 # Udfordringer med kunden / Customer Issues
                 "kunden sur", "sur kunde", "kunden klager", "klager kunde", "afsender afviser", "afviser afsender", "modtager uenig",
                 "uening modtager", "problem med kunde", "kunde problem", "utilfreds kunde", "klage", "afvisning", "uenighed",
-                "problem med kunde", "at vente på personale", "vente på personale",
+                "problem med kunde",
                 "receiver refused", "refused receiver", "sender issue", "issue with sender", "customer complaint", "complaint from customer",
                 "customer upset", "upset customer", "problem with customer", "complaint", "refusal", "issue", "disagreement", "unhappy customer",
                 # Besværlig leveringsadresse / Difficult Delivery Location
