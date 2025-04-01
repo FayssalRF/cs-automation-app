@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS for at pifte udseendet op
+# Tilføj brugerdefineret CSS for et flot udseende
 st.markdown(
     """
     <style>
@@ -21,7 +21,7 @@ st.markdown(
     h1, h2, h3 {
         color: #333333;
     }
-    /* Pynter på knappen og uploaderen */
+    /* Stil på knapper */
     .stButton>button {
         background-color: #4CAF50;
         color: white;
@@ -44,6 +44,7 @@ st.markdown("### Velkommen til appen til analyse af controlling rapporter")
 st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
 st.write("- SessionId, Date, CustomerId, CustomerName, EstDuration, ActDuration, DurationDifference, SupportNote")
 
+# Filupload
 uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"])
 
 if uploaded_file is not None:
@@ -114,7 +115,7 @@ if uploaded_file is not None:
                 "uening modtager", "problem med kunde", "kunde problem", "utilfreds kunde", "klage", "afvisning", "uenighed",
                 "problem med kunde",
                 "receiver refused", "refused receiver", "sender issue", "issue with sender", "customer complaint", "complaint from customer",
-                "customer upset", "upset customer", "problem med kunde", "complaint", "refusal", "issue", "disagreement", "unhappy customer",
+                "customer upset", "upset customer", "problem with customer", "complaint", "refusal", "issue", "disagreement", "unhappy customer",
                 # Besværlig leveringsadresse / Difficult Delivery Location
                 "hospital", "skole", "center", "gågade", "etageejendom", "manglende parkering", "parkering mangler", "svært at finde",
                 "vanskelig at finde", "besværlig levering", "tricky adresse", "svær placering", "ingen parkering", "trafikeret område",
@@ -123,7 +124,7 @@ if uploaded_file is not None:
                 "hard to find", "delivery challenge", "hospital", "school", "mall", "apartment building", "no parking",
                 "complicated delivery", "difficult address", "busy area"
             ]
-            # Gør alle nøgleord små for case-insensitiv søgning
+            # Gør alle nøgleord små for at sikre case-insensitiv søgning
             all_keywords = [kw.lower() for kw in all_keywords]
 
             # Funktion til at analysere supportnote
@@ -149,10 +150,17 @@ if uploaded_file is not None:
                 "Keywords", "MatchingKeyword"
             ]
 
-            st.markdown("#### Analyserede Resultater:")
-            st.dataframe(df[output_cols])
+            # Sektion: Rækker med "Ja"
+            st.markdown("#### Analyserede Resultater - Med ekstra tid (Ja):")
+            df_yes = df[df["Keywords"] == "Ja"]
+            st.dataframe(df_yes[output_cols])
 
-            # Gem dataframen som en Excel-fil i hukommelsen
+            # Sektion: Rækker med "Nej"
+            st.markdown("#### Analyserede Resultater - Uden ekstra tid (Nej):")
+            df_no = df[df["Keywords"] == "Nej"]
+            st.dataframe(df_no[output_cols])
+
+            # Gem dataframen som en samlet Excel-fil i hukommelsen
             towrite = io.BytesIO()
             with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Analyseret')
