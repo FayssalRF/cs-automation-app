@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med opdateret typography og ekstra mellemrum mellem fanepunkterne
+# Tilføj brugerdefineret CSS med opdateret typography og ekstra mellemrum mellem fanepunkterne (30px margin)
 st.markdown(
     """
     <style>
@@ -24,7 +24,7 @@ st.markdown(
         color: #000 !important;
     }
     
-    /* Headings: Brug Open Sans, Regular, med større fontstørrelser og en primær farve (#333333) */
+    /* Headings: Brug Open Sans, Regular, med større fontstørrelser og primær farve (#333333) */
     h1 {
         font-family: 'Open Sans', sans-serif;
         font-size: 3em !important;
@@ -66,9 +66,9 @@ st.markdown(
         color: #008080 !important;
     }
     
-    /* Ekstra mellemrum mellem fanepunkterne */
+    /* Øget mellemrum mellem fanepunkterne: 30px margin */
     [data-baseweb="tab"] {
-        margin-right: 20px !important;
+        margin-right: 30px !important;
     }
     </style>
     """,
