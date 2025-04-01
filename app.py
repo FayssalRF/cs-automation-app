@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+from PIL import Image
 
 # Konfigurer siden
 st.set_page_config(
@@ -75,6 +76,13 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Forsøg at indlæse logoet med PIL og vis med st.image
+try:
+    logo = Image.open("moverLogotype_blue.png")
+    st.image(logo, width=150)
+except Exception as e:
+    st.error("Fejl ved indlæsning af logo: " + str(e))
+
 # Læs keywords fra den eksterne fil "keywords.txt"
 try:
     with open("keywords.txt", "r", encoding="utf-8") as file:
@@ -96,16 +104,6 @@ def analyse_supportnote(note):
         return "Ja", ", ".join(matched)
     else:
         return "Nej", ""
-
-# Vis logo øverst i midten
-st.markdown(
-    """
-    <div style='text-align: center; margin-bottom: 20px;'>
-        <img src='moverLogotype_blue.png' style='max-width: 150px;' alt='Mover logo'>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
 
 # Opret fanebjælke med 5 faner: Forside, Controlling Report Analyzer, Solar Weekly Report, Solar CO2 Report, Revenue analyser
 tabs = st.tabs(["Forside", "Controlling Report Analyzer", "Solar Weekly Report", "Solar CO2 Report", "Revenue analyser"])
