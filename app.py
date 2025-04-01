@@ -53,7 +53,7 @@ tabs = st.tabs(["Forside", "Controlling Report Analyzer", "Solar Weekly Report",
 with tabs[0]:
     st.markdown("<div style='text-align: center;'><h1>Customer Success Automation site</h1></div>", unsafe_allow_html=True)
     st.markdown("<div style='text-align: center;'><h2>Velkommen!</h2></div>", unsafe_allow_html=True)
-    st.write('text-align: center;"Vælg et menupunkt i fanebjælken ovenfor for at komme videre.")
+    st.markdown("<div style='text-align: center;'><p>Vælg et menupunkt i fanebjælken ovenfor for at komme videre.</p></div>", unsafe_allow_html=True)
 
 # Fanen: Controlling Report Analyzer
 with tabs[1]:
