@@ -27,14 +27,16 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med opdaterede knap-stilarter og typografi
+# Tilføj brugerdefineret CSS med opdaterede knap-stilarter:
+# Primære knapper har en solid, mørkeblå (#191970) baggrund med hvid, fed tekst og afrundede hjørner.
+# Den aktive tilstand er fjernet, så knappen forbliver mørkeblå ved klik.
 st.markdown(
     """
     <style>
     /* Importér Open Sans fra Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
 
-    /* Anvend Open Sans, Regular, minimum 16pt for alle paragraffer, lister og markdown-elementer */
+    /* Generel typografi */
     body, .main, p, li, .stMarkdown {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
@@ -62,7 +64,7 @@ st.markdown(
         color: #333333 !important;
     }
     
-    /* Primære knapper: Solid fill med midnat blå (#191970), hvid, fed tekst, afrundede hjørner og overgang til lyseblå (#ADD8E6) ved klik */
+    /* Primære knapper: Mørkeblå (#191970) med hvid, fed tekst, afrundede hjørner */
     .stButton>button {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
@@ -75,11 +77,12 @@ st.markdown(
         cursor: pointer;
         transition: background-color 0.3s;
     }
+    /* Fjern ændring af baggrundsfarve ved klik (active state) */
     .stButton>button:active {
-        background-color: #ADD8E6 !important;
+        background-color: #191970 !important;
     }
     
-    /* Labels (fx. fra file-uploader) - lower case med teal farve */
+    /* Labels (fx. fra file-uploader) */
     .stFileUploader label {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
@@ -97,7 +100,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (placeret øverst til venstre)
+# Forsøg at indlæse logoet med PIL og vis det med st.image med en bredde på 300px (øverst til venstre)
 try:
     logo = Image.open("moverLogotype_blue.png")
     st.image(logo, width=300)
