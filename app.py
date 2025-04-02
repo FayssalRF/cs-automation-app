@@ -27,8 +27,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med Open Sans, øget tekststørrelse, ekstra margin mellem fanepunkterne,
-# og opdateret primær knap-stil (hvid, fed tekst)
+# Tilføj brugerdefineret CSS med opdaterede knap-stilarter og typografi
 st.markdown(
     """
     <style>
@@ -43,7 +42,7 @@ st.markdown(
         color: #000 !important;
     }
     
-    /* Headings: Brug Open Sans med større skriftstørrelser og primær farve (#333333) */
+    /* Headings */
     h1 {
         font-family: 'Open Sans', sans-serif;
         font-size: 3em !important;
@@ -63,7 +62,7 @@ st.markdown(
         color: #333333 !important;
     }
     
-    /* Primære knapper: Solid fill med midnat blå (#191970), hvid, fed tekst og runde hjørner */
+    /* Primære knapper: Solid fill med midnat blå (#191970), hvid, fed tekst, afrundede hjørner og overgang til lyseblå (#ADD8E6) ved klik */
     .stButton>button {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
@@ -74,9 +73,13 @@ st.markdown(
         padding: 10px 24px;
         border-radius: 25px;
         cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .stButton>button:active {
+        background-color: #ADD8E6 !important;
     }
     
-    /* Labels (fx. fra file-uploader) - vises i lower case med teal farve */
+    /* Labels (fx. fra file-uploader) - lower case med teal farve */
     .stFileUploader label {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
@@ -109,8 +112,6 @@ try:
 except Exception as e:
     st.error("Fejl ved indlæsning af keywords: " + str(e))
     all_keywords = []
-
-# Sørg for, at alle keywords er i små bogstaver for case-insensitiv søgning
 all_keywords = [kw.lower() for kw in all_keywords]
 
 def analyse_supportnote(note):
@@ -124,8 +125,7 @@ def analyse_supportnote(note):
     else:
         return "Nej", ""
 
-# Opret fanebjælke med 5 faner:
-# Forside, Controlling Report Analyzer, Solar Weekly Report, Solar CO2 Report, Revenue analyser
+# Opret fanebjælke med 5 faner: Forside, Controlling Report Analyzer, Solar Weekly Report, Solar CO2 Report, Revenue analyser
 tabs = st.tabs(["Forside", "Controlling Report Analyzer", "Solar Weekly Report", "Solar CO2 Report", "Revenue analyser"])
 
 # Fanen: Forside
