@@ -5,6 +5,21 @@ import requests
 from PIL import Image
 from datetime import date
 
+# Sikkerhed: Enkel login-godkendelse
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    st.title("Login")
+    password = st.text_input("Indtast adgangskode", type="password")
+    if st.button("Login"):
+        if password == "CSlikestomoveitmoveit123":  # Ændr denne kode til din ønskede adgangskode
+            st.session_state.authenticated = True
+            st.success("Adgangskode korrekt!")
+        else:
+            st.error("Forkert adgangskode!")
+    st.stop()
+
 # Konfigurer siden
 st.set_page_config(
     page_title="Analyser",
@@ -12,7 +27,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med opdaterede knap-stilarter (tekst på knappen er hvid)
+# Tilføj brugerdefineret CSS med Open Sans, øget tekststørrelse, ekstra margin mellem fanepunkterne og knap-stil
 st.markdown(
     """
     <style>
@@ -108,7 +123,8 @@ def analyse_supportnote(note):
     else:
         return "Nej", ""
 
-# Opret fanebjælke med 5 faner: Forside, Controlling Report Analyzer, Solar Weekly Report, Solar CO2 Report, Revenue analyser
+# Opret fanebjælke med 5 faner:
+# Forside, Controlling Report Analyzer, Solar Weekly Report, Solar CO2 Report, Revenue analyser
 tabs = st.tabs(["Forside", "Controlling Report Analyzer", "Solar Weekly Report", "Solar CO2 Report", "Revenue analyser"])
 
 # Fanen: Forside
