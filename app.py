@@ -27,12 +27,13 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med Open Sans, øget tekststørrelse, ekstra margin mellem fanepunkterne og knap-stil
+# Tilføj brugerdefineret CSS med Open Sans, øget tekststørrelse, ekstra margin mellem fanepunkterne,
+# og opdateret primær knap-stil (hvid, fed tekst)
 st.markdown(
     """
     <style>
     /* Importér Open Sans fra Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
 
     /* Anvend Open Sans, Regular, minimum 16pt for alle paragraffer, lister og markdown-elementer */
     body, .main, p, li, .stMarkdown {
@@ -42,7 +43,7 @@ st.markdown(
         color: #000 !important;
     }
     
-    /* Headings: Brug Open Sans, Regular med større skriftstørrelser og primær farve (#333333) */
+    /* Headings: Brug Open Sans med større skriftstørrelser og primær farve (#333333) */
     h1 {
         font-family: 'Open Sans', sans-serif;
         font-size: 3em !important;
@@ -62,11 +63,11 @@ st.markdown(
         color: #333333 !important;
     }
     
-    /* Primære knapper: Solid fill med midnat blå (#191970), hvid tekst og runde hjørner */
+    /* Primære knapper: Solid fill med midnat blå (#191970), hvid, fed tekst og runde hjørner */
     .stButton>button {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
-        font-weight: 400 !important;
+        font-weight: 700 !important;
         background-color: #191970;
         color: white !important;
         border: none;
@@ -93,7 +94,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL og vis det med st.image med en bredde på 300px (placeret øverst til venstre)
+# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (placeret øverst til venstre)
 try:
     logo = Image.open("moverLogotype_blue.png")
     st.image(logo, width=300)
