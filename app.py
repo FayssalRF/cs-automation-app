@@ -27,9 +27,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med opdaterede knap-stilarter:
-# Primære knapper har en solid, mørkeblå (#191970) baggrund med hvid, fed tekst og afrundede hjørner.
-# Den aktive tilstand er fjernet, så knappen forbliver mørkeblå ved klik.
+# Tilføj brugerdefineret CSS med opdaterede knap-stilarter
 st.markdown(
     """
     <style>
@@ -64,7 +62,7 @@ st.markdown(
         color: #333333 !important;
     }
     
-    /* Primære knapper: Mørkeblå (#191970) med hvid, fed tekst, afrundede hjørner */
+    /* Primære knapper (standard) */
     .stButton>button {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
@@ -77,12 +75,8 @@ st.markdown(
         cursor: pointer;
         transition: background-color 0.3s;
     }
-    /* Fjern ændring af baggrundsfarve ved klik (active state) */
-    .stButton>button:active {
-        background-color: #191970 !important;
-    }
     
-    /* Labels (fx. fra file-uploader) */
+    /* Labels fra file-uploader */
     .stFileUploader label {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
@@ -91,16 +85,27 @@ st.markdown(
         color: #008080 !important;
     }
     
-    /* Øg afstanden mellem fanepunkterne til 30px */
+    /* Margin mellem fanepunkterne */
     [data-baseweb="tab"] {
         margin-right: 30px !important;
+    }
+    
+    /* Specifik styling for "Hent rapport" knappen */
+    .hentRapportContainer .stButton > button {
+        background-color: #ADD8E6 !important; /* lyseblå */
+        color: white !important;
+        font-weight: 700 !important;
+    }
+    .hentRapportContainer .stButton > button:active {
+        background-color: white !important;
+        color: #191970 !important;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL og vis det med st.image med en bredde på 300px (øverst til venstre)
+# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (øverst til venstre)
 try:
     logo = Image.open("moverLogotype_blue.png")
     st.image(logo, width=300)
@@ -216,7 +221,13 @@ with tabs[2]:
     from_date = st.date_input("Fra dato", value=date(2025, 1, 1), key="from_date")
     to_date = st.date_input("Til dato", value=date(2025, 1, 7), key="to_date")
     
-    if st.button("Hent rapport"):
+    # Pak knappen ind i en container med en særskilt CSS-klasse for "Hent rapport" knappen
+    with st.container():
+        st.markdown('<div class="hentRapportContainer">', unsafe_allow_html=True)
+        hent_rapport_clicked = st.button("Hent rapport")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    if hent_rapport_clicked:
         if to_date < from_date:
             st.error("Til dato skal være efter fra dato!")
         elif (to_date - from_date).days > 7:
