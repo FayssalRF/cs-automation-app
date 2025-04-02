@@ -10,7 +10,7 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.title("Login")
+    st.title("Login Form")
     password = st.text_input("Indtast adgangskode", type="password")
     if st.button("Login"):
         if password == "CSlikestomoveitmoveit123":  # Ændr denne kode til din ønskede adgangskode
