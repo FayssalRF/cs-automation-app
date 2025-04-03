@@ -69,6 +69,8 @@ st.markdown(
         border-radius: 25px;
         cursor: pointer;
         transition: background-color 0.3s, color 0.3s;
+    .stButton>button:active {
+        background-color: #00000 !important;
     }
     /* Labels fra file-uploader */
     .stFileUploader label {
