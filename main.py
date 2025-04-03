@@ -60,7 +60,7 @@ st.markdown(
     }
     /* Primære knapper */
     .stButton>button {
-        font-size: 8pt !important;
+        font-size: 14pt !important;
         font-weight: 700 !important;
         background-color: #D7F3F9;
         color: white !important;
