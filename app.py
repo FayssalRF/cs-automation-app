@@ -27,7 +27,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tilføj brugerdefineret CSS med opdaterede knap-stilarter
+# Tilføj brugerdefineret CSS med opdaterede knap-stilarter og typografi
 st.markdown(
     """
     <style>
@@ -62,21 +62,31 @@ st.markdown(
         color: #333333 !important;
     }
     
-    /* Primære knapper (standard) */
+    /* Primære knapper (generel) */
     .stButton>button {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
         font-weight: 700 !important;
-        background-color: #191970;
+        background-color: #191970; /* standard mørkeblå */
         color: white !important;
         border: none;
         padding: 10px 24px;
         border-radius: 25px;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition: background-color 0.3s, color 0.3s;
     }
     
-    /* Labels fra file-uploader */
+    /* Specifik styling for "Hent rapport"-knappen */
+    .hentRapportContainer .stButton > button {
+        background-color: #D7F3F9 !important; /* Light Blue */
+        color: white !important;
+    }
+    .hentRapportContainer .stButton > button:active {
+        background-color: white !important;
+        color: #01293D !important; /* Midnight Blue */
+    }
+    
+    /* Labels (fx. fra file-uploader) */
     .stFileUploader label {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt !important;
@@ -89,23 +99,12 @@ st.markdown(
     [data-baseweb="tab"] {
         margin-right: 30px !important;
     }
-    
-    /* Specifik styling for "Hent rapport" knappen */
-    .hentRapportContainer .stButton > button {
-        background-color: #ADD8E6 !important; /* lyseblå */
-        color: white !important;
-        font-weight: 700 !important;
-    }
-    .hentRapportContainer .stButton > button:active {
-        background-color: white !important;
-        color: #191970 !important;
-    }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Forsøg at indlæse logoet med PIL og vis med st.image med en bredde på 300px (øverst til venstre)
+# Forsøg at indlæse logoet med PIL og vis med st.image (300px bredde, øverst til venstre)
 try:
     logo = Image.open("moverLogotype_blue.png")
     st.image(logo, width=300)
@@ -113,7 +112,7 @@ try:
 except Exception as e:
     st.error("Fejl ved indlæsning af logo: " + str(e))
 
-# Læs keywords fra den eksterne fil "keywords.txt"
+# Læs keywords fra filen "keywords.txt"
 try:
     with open("keywords.txt", "r", encoding="utf-8") as file:
         all_keywords = [line.strip() for line in file if line.strip()]
@@ -133,7 +132,7 @@ def analyse_supportnote(note):
     else:
         return "Nej", ""
 
-# Opret fanebjælke med 5 faner: Forside, Controlling Report Analyzer, Solar Weekly Report, Solar CO2 Report, Revenue analyser
+# Opret fanebjælke med 5 faner
 tabs = st.tabs(["Forside", "Controlling Report Analyzer", "Solar Weekly Report", "Solar CO2 Report", "Revenue analyser"])
 
 # Fanen: Forside
@@ -221,7 +220,7 @@ with tabs[2]:
     from_date = st.date_input("Fra dato", value=date(2025, 1, 1), key="from_date")
     to_date = st.date_input("Til dato", value=date(2025, 1, 7), key="to_date")
     
-    # Pak knappen ind i en container med en særskilt CSS-klasse for "Hent rapport" knappen
+    # Brug en container med klassen hentRapportContainer til den specifikke knap-stil
     with st.container():
         st.markdown('<div class="hentRapportContainer">', unsafe_allow_html=True)
         hent_rapport_clicked = st.button("Hent rapport")
