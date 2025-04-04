@@ -60,12 +60,19 @@ def revenue_tab():
     
     # Beregn procentvis ændring
     df_filtered['YTD Change %'] = ((df_filtered['ÅTD 2025'] - df_filtered['ÅTD 2024']) / df_filtered['ÅTD 2024']) * 100
+
+    # Formatteringsfunktion for DKK
+    def format_currency(x):
+        # Erstat komma med punktum for at efterligne dansk tusindtalsseparator
+        return "kr. " + f"{x:,.0f}".replace(",", ".")
+    
+    # Opret et display-DataFrame og formater ÅTD-kolonnerne
+    df_display = df_filtered[['Company Name', 'ÅTD 2024', 'ÅTD 2025', 'YTD Change %']].sort_values('YTD Change %', ascending=False).copy()
+    df_display['ÅTD 2024'] = df_display['ÅTD 2024'].apply(format_currency)
+    df_display['ÅTD 2025'] = df_display['ÅTD 2025'].apply(format_currency)
     
     st.subheader("ÅTD Revenue Sammenligning")
-    st.dataframe(
-        df_filtered[['Company Name', 'ÅTD 2024', 'ÅTD 2025', 'YTD Change %']]
-        .sort_values('YTD Change %', ascending=False)
-    )
+    st.dataframe(df_display)
     
     st.subheader("Top 10 virksomheder - YTD Change %")
     top_10 = df_filtered.sort_values('YTD Change %', ascending=False).head(10)
