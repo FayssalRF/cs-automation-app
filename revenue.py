@@ -50,8 +50,13 @@ def revenue_tab():
     df_dates['ÅTD 2024'] = df_dates[cols_2024_common].sum(axis=1)
     df_dates['ÅTD 2025'] = df_dates[cols_2025_common].sum(axis=1)
     
-    # Filtrer kun de virksomheder, der har revenue i begge år (dvs. hvor sum ikke er 0)
-    df_filtered = df_dates[(df_dates['ÅTD 2024'] != 0) & (df_dates['ÅTD 2025'] != 0)].copy()
+    # Filtrer kun de virksomheder, der har revenue i begge år og revenue > 50.000 kr.
+    df_filtered = df_dates[
+        (df_dates['ÅTD 2024'] != 0) & 
+        (df_dates['ÅTD 2025'] != 0) &
+        (df_dates['ÅTD 2024'] > 50000) &
+        (df_dates['ÅTD 2025'] > 50000)
+    ].copy()
     
     # Beregn procentvis ændring
     df_filtered['YTD Change %'] = ((df_filtered['ÅTD 2025'] - df_filtered['ÅTD 2024']) / df_filtered['ÅTD 2024']) * 100
@@ -64,7 +69,7 @@ def revenue_tab():
     
     st.subheader("Top 10 virksomheder - YTD Change %")
     top_10 = df_filtered.sort_values('YTD Change %', ascending=False).head(10)
-    # Fast bredde (300px ~ 3 inches ved standard dpi) forbliver uafhængig af browserens zoom
+    # Fast bredde (300px ~ 3 inches ved standard dpi) uafhængig af browserzoom
     fig, ax = plt.subplots(figsize=(3, 1.5))
     ax.barh(top_10['Company Name'], top_10['YTD Change %'])
     ax.set_xlabel("YTD Change %")
