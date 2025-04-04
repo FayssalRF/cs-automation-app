@@ -33,7 +33,7 @@ def revenue_tab():
         return
     df_dates.columns = df_dates.columns[:3].tolist() + new_date_cols.tolist()
     
-    # Filtrer kun de kolonner, der svarer til 2024 og 2025
+    # Filtrer kun de kolonner, der tilhører 2024 og 2025
     datetime_cols = [col for col in df_dates.columns[3:] if isinstance(col, pd.Timestamp) and col.year in [2024, 2025]]
     df_dates = df_dates[['Company Name', 'Name', 'ID'] + datetime_cols]
     
@@ -50,7 +50,7 @@ def revenue_tab():
     df_dates['ÅTD 2024'] = df_dates[cols_2024_common].sum(axis=1)
     df_dates['ÅTD 2025'] = df_dates[cols_2025_common].sum(axis=1)
     
-    # Filtrer kun de virksomheder, der har revenue i begge år og revenue > 50.000 kr.
+    # Filtrer virksomheder med revenue > 50.000 kr. i begge år
     df_filtered = df_dates[
         (df_dates['ÅTD 2024'] != 0) & 
         (df_dates['ÅTD 2025'] != 0) &
@@ -63,24 +63,34 @@ def revenue_tab():
 
     # Formatteringsfunktion for DKK
     def format_currency(x):
-        # Erstat komma med punktum for at efterligne dansk tusindtalsseparator
         return "kr. " + f"{x:,.0f}".replace(",", ".")
     
-    # Opret et display-DataFrame og formater ÅTD-kolonnerne
+    # Opret display-DataFrame med formaterede beløb
     df_display = df_filtered[['Company Name', 'ÅTD 2024', 'ÅTD 2025', 'YTD Change %']].sort_values('YTD Change %', ascending=False).copy()
     df_display['ÅTD 2024'] = df_display['ÅTD 2024'].apply(format_currency)
     df_display['ÅTD 2025'] = df_display['ÅTD 2025'].apply(format_currency)
+    # Formatér YTD Change % til procenter med maksimalt to decimaler
+    df_display['YTD Change %'] = df_display['YTD Change %'].apply(lambda x: f"{x:.2f}%")
     
     st.subheader("ÅTD Revenue Sammenligning")
     st.dataframe(df_display)
     
-    st.subheader("Top 10 virksomheder - YTD Change %")
+    # Graf for Top 10 stigninger
+    st.subheader("Top 10 virksomheder - YTD Change % (Stigninger)")
     top_10 = df_filtered.sort_values('YTD Change %', ascending=False).head(10)
-    # Fast bredde (300px ~ 3 inches ved standard dpi) uafhængig af browserzoom
-    fig, ax = plt.subplots(figsize=(3, 1.5))
-    ax.barh(top_10['Company Name'], top_10['YTD Change %'])
-    ax.set_xlabel("YTD Change %")
-    ax.set_title("Top 10 - YTD Change 2025 vs. 2024")
-    st.pyplot(fig, use_container_width=False)
+    fig_top, ax_top = plt.subplots(figsize=(3, 1.5))
+    ax_top.barh(top_10['Company Name'], top_10['YTD Change %'])
+    ax_top.set_xlabel("YTD Change %")
+    ax_top.set_title("Top 10 Stigninger")
+    st.pyplot(fig_top, use_container_width=False)
+    
+    # Graf for Top 10 fald
+    st.subheader("Top 10 virksomheder - YTD Change % (Fald)")
+    bottom_10 = df_filtered.sort_values('YTD Change %', ascending=True).head(10)
+    fig_bottom, ax_bottom = plt.subplots(figsize=(3, 1.5))
+    ax_bottom.barh(bottom_10['Company Name'], bottom_10['YTD Change %'])
+    ax_bottom.set_xlabel("YTD Change %")
+    ax_bottom.set_title("Top 10 Fald")
+    st.pyplot(fig_bottom, use_container_width=False)
     
     st.metric("Antal virksomheder analyseret", f"{len(df_filtered)}")
