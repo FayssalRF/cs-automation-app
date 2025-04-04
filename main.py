@@ -68,7 +68,7 @@ st.markdown(
 # Indlæs logo
 try:
     logo = Image.open("moverLogotype_blue.png")
-    st.image(logo, width=300)
+    st.image(logo, width=200)
     st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 except Exception as e:
     st.error("Fejl ved indlæsning af logo: " + str(e))
