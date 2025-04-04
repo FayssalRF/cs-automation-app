@@ -69,28 +69,36 @@ def revenue_tab():
     df_display = df_filtered[['Company Name', 'ÅTD 2024', 'ÅTD 2025', 'YTD Change %']].sort_values('YTD Change %', ascending=False).copy()
     df_display['ÅTD 2024'] = df_display['ÅTD 2024'].apply(format_currency)
     df_display['ÅTD 2025'] = df_display['ÅTD 2025'].apply(format_currency)
-    # Formatér YTD Change % til procenter med maksimalt to decimaler
     df_display['YTD Change %'] = df_display['YTD Change %'].apply(lambda x: f"{x:.2f}%")
     
     st.subheader("ÅTD Revenue Sammenligning")
     st.dataframe(df_display)
     
-    # Graf for Top 10 stigninger
-    st.subheader("Top 10 virksomheder - YTD Change % (Stigninger)")
+    # Forbered graferne
     top_10 = df_filtered.sort_values('YTD Change %', ascending=False).head(10)
-    fig_top, ax_top = plt.subplots(figsize=(3, 1.5))
-    ax_top.barh(top_10['Company Name'], top_10['YTD Change %'])
-    ax_top.set_xlabel("YTD Change %")
-    ax_top.set_title("Top 10 Stigninger")
-    st.pyplot(fig_top, use_container_width=False)
-    
-    # Graf for Top 10 fald
-    st.subheader("Top 10 virksomheder - YTD Change % (Fald)")
     bottom_10 = df_filtered.sort_values('YTD Change %', ascending=True).head(10)
-    fig_bottom, ax_bottom = plt.subplots(figsize=(3, 1.5))
-    ax_bottom.barh(bottom_10['Company Name'], bottom_10['YTD Change %'])
-    ax_bottom.set_xlabel("YTD Change %")
-    ax_bottom.set_title("Top 10 Fald")
-    st.pyplot(fig_bottom, use_container_width=False)
+    
+    # Placer graferne side om side med st.columns
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Top 10 virksomheder - YTD Change % (Stigninger)")
+        fig_top, ax_top = plt.subplots(figsize=(3, 1.5))
+        ax_top.barh(top_10['Company Name'], top_10['YTD Change %'])
+        ax_top.set_xlabel("YTD Change %")
+        ax_top.set_title("Top 10 Stigninger")
+        # Tilføj ekstra padding mellem tick labels på y-aksen
+        ax_top.tick_params(axis='y', which='major', pad=15)
+        st.pyplot(fig_top, use_container_width=False)
+    
+    with col2:
+        st.subheader("Top 10 virksomheder - YTD Change % (Fald)")
+        fig_bottom, ax_bottom = plt.subplots(figsize=(3, 1.5))
+        ax_bottom.barh(bottom_10['Company Name'], bottom_10['YTD Change %'])
+        ax_bottom.set_xlabel("YTD Change %")
+        ax_bottom.set_title("Top 10 Fald")
+        # Tilføj ekstra padding mellem tick labels på y-aksen
+        ax_bottom.tick_params(axis='y', which='major', pad=15)
+        st.pyplot(fig_bottom, use_container_width=False)
     
     st.metric("Antal virksomheder analyseret", f"{len(df_filtered)}")
