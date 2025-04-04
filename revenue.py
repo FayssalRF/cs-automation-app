@@ -18,7 +18,7 @@ def revenue_tab():
         st.error(f"Fejl ved indlæsning af Excel-fil: {e}")
         return
 
-    # Fjern tomme rækker og kun dem med Company Name
+    # Fjern tomme rækker og behold kun dem med Company Name
     df = df.dropna(subset=["Company Name"])
 
     # Find kolonner med datoer og behold kun 2023, 2024 og 2025
@@ -62,7 +62,8 @@ def revenue_tab():
 
     st.subheader(":bar_chart: YTD Vækst 2025 vs. 2024")
     top_ytd = df_filtered.sort_values('YTD Growth %', ascending=False).head(10)
-    fig, ax = plt.subplots(figsize=(8, 4))
+    # Her sættes figurens størrelse til 300px bred (3 inches) og 1.5 inches høj
+    fig, ax = plt.subplots(figsize=(3, 1.5))
     ax.barh(top_ytd['Company Name'], top_ytd['YTD Growth %'])
     ax.set_xlabel("YTD Growth %")
     ax.set_title("Top 10 kunder - YTD 2025 vs. 2024")
