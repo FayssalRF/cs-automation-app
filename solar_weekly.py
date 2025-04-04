@@ -21,7 +21,7 @@ def solar_weekly_tab():
         st.error("❌ Perioden må ikke være mere end 7 dage!")
         return
 
-    # 2. Generer datawarehouse-linket
+    # 2. Generer datawarehouse-linket baseret på de valgte datoer
     base_url = "https://moverdatawarehouse.azurewebsites.net/download/routestats"
     generated_url = (
         f"{base_url}?apikey=b48c55&Userid=6016"
@@ -40,35 +40,18 @@ def solar_weekly_tab():
         try:
             df = pd.read_excel(uploaded_file, engine="openpyxl")
             
-            # Forventede kolonner (baseret på deres position):
-            # Kolonne A: Stop ID
-            # Kolonne B: ADDRESS REFERENCE  --> Booking ref.
-            # Kolonne C: Route ID         --> Route ID
-            # Kolonne D: RUTE REFERENCE
-            # Kolonne E: BOOKING RECEIVED --> Booking to Mover
-            # Kolonne F: Driver ID        --> Driver ID
-            # Kolonne G: Vehicle          --> Vehicle type
-            # Kolonne H: Date             --> Date
-            # Kolonne I: Rank
-            # Kolonne J: ADDRESS          --> Pickup adress (hvis StopType == "Pickup") eller Delivery adress (hvis StopType == "Delivery")
-            # Kolonne K: ZIPCODE          --> Delivery zipcode
-            # ...
-            # Kolonne AD: StopType        --> angiver "Pickup" eller "Delivery"
-            # Kolonne N: ARRIVED          --> Pickup arrival (hvis Pickup)
-            # Kolonne O: COMPLETED        --> Pickup completed (hvis Pickup) eller Delivery completed (hvis Delivery)
-            
-            # Fjern rækker, hvor "ADDRESS REFERENCE" (kolonne B) er tom
+            # Drop rækker hvor 'ADDRESS REFERENCE' (kolonne B) er tom
             df = df.dropna(subset=["ADDRESS REFERENCE"])
             
             final_rows = []
             # Gruppér efter "ADDRESS REFERENCE" (Booking ref.)
             for ref, group in df.groupby("ADDRESS REFERENCE"):
-                # For hver gruppe: find rækken med Pickup og rækken med Delivery baseret på StopType (kolonne AD)
+                # Find rækken med Pickup og rækken med Delivery
                 pickup = group[group["StopType"].str.strip().str.lower() == "pickup"]
                 delivery = group[group["StopType"].str.strip().str.lower() == "delivery"]
                 
                 if pickup.empty or delivery.empty:
-                    continue  # spring denne reference over, hvis data mangler
+                    continue  # Spring over, hvis enten pickup eller delivery mangler
                 
                 pickup_row = pickup.iloc[0]
                 delivery_row = delivery.iloc[0]
