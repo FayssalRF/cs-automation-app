@@ -62,12 +62,12 @@ def revenue_tab():
 
     st.subheader(":bar_chart: YTD Vækst 2025 vs. 2024")
     top_ytd = df_filtered.sort_values('YTD Growth %', ascending=False).head(10)
-    # Her sættes figurens størrelse til 300px bred (3 inches) og 1.5 inches høj
+    # Figurens størrelse sættes til 300px bred (3 inches) og 1.5 inches høj
     fig, ax = plt.subplots(figsize=(3, 1.5))
     ax.barh(top_ytd['Company Name'], top_ytd['YTD Growth %'])
     ax.set_xlabel("YTD Growth %")
     ax.set_title("Top 10 kunder - YTD 2025 vs. 2024")
-    st.pyplot(fig)
+    st.pyplot(fig, use_container_width=False)
 
     # Vis samlet statistik
     st.metric("Antal kunder med >20% vækst", f"{len(df_filtered)} kunder")
