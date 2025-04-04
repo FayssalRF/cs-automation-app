@@ -87,8 +87,8 @@ def revenue_tab():
         ax_top.barh(top_10['Company Name'], top_10['YTD Change %'])
         ax_top.set_xlabel("YTD Change %")
         ax_top.set_title("Top 10 Stigninger")
-        # Tilføj ekstra padding mellem y-aksens tick labels (company names)
-        ax_top.tick_params(axis='y', which='major', pad=30)
+        # Øg afstanden mellem y-aksens tick labels (company names)
+        ax_top.tick_params(axis='y', which='major', pad=50)
         st.pyplot(fig_top, use_container_width=False)
     
     with col2:
@@ -97,7 +97,7 @@ def revenue_tab():
         ax_bottom.barh(bottom_10['Company Name'], bottom_10['YTD Change %'])
         ax_bottom.set_xlabel("YTD Change %")
         ax_bottom.set_title("Top 10 Fald")
-        # Behold padding for fald-grafen som tidligere
+        # Behold tidligere padding for fald-grafen
         ax_bottom.tick_params(axis='y', which='major', pad=15)
         st.pyplot(fig_bottom, use_container_width=False)
     
