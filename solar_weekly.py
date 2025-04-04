@@ -7,7 +7,7 @@ from datetime import date
 def solar_weekly_tab():
     st.title("Solar Weekly Report")
 
-    st.subheader("1. Vælg en periode (maks 7 dage)")
+    st.markdown("### 1. Vælg en periode (maks 7 dage)")
     col1, col2 = st.columns(2)
     with col1:
         from_date = st.date_input("Fra dato", value=date(2025, 1, 1), key="sw_from")
@@ -29,11 +29,12 @@ def solar_weekly_tab():
         f"&FromDate={from_date.strftime('%Y-%m-%d')}"
         f"&ToDate={to_date.strftime('%Y-%m-%d')}"
     )
-    st.subheader("2. Download link til rapport")
+
+    st.markdown("### 2. Download link til rapport")
     st.markdown(f"[Download rapport]({generated_url})", unsafe_allow_html=True)
     st.info("Kopier linket og indsæt det i din browser for at hente Excel-filen manuelt.")
 
-    st.subheader("3. Upload den hentede Excel-rapport")
+    st.markdown("### 3. Upload den hentede Excel-rapport")
     uploaded_file = st.file_uploader("Upload Solar Weekly Excel-fil", type=["xlsx"], key="sw_upload")
 
     if uploaded_file:
@@ -55,12 +56,12 @@ def solar_weekly_tab():
                 st.success("✅ Filen er valid og indlæst korrekt.")
                 st.dataframe(df_filtered)
 
-                # Udfør dataanalyse: Beskrivende statistik
-                st.subheader("Data Analyse")
+                # Dataanalyse: Beskrivende statistik
+                st.markdown("#### Data Analyse")
                 st.write("Beskrivende statistik:")
                 st.write(df_filtered.describe(include='all'))
 
-                # Hvis 'Date'-kolonnen findes, lav et plot af antal bookinger per dag
+                # Plot af antal bookinger per dag, hvis 'Date'-kolonnen findes
                 if 'Date' in df_filtered.columns:
                     df_filtered['Date'] = pd.to_datetime(df_filtered['Date'], errors='coerce')
                     bookings_per_date = df_filtered.groupby('Date').size().reset_index(name='Antal Bookinger')
@@ -71,7 +72,7 @@ def solar_weekly_tab():
                     ax.set_ylabel("Antal Bookinger")
                     st.pyplot(fig)
 
-                # Lav en download-knap for den filtrerede rapport
+                # Download-knap for den filtrerede rapport
                 towrite = io.BytesIO()
                 with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
                     df_filtered.to_excel(writer, index=False, sheet_name='SolarWeeklyReport')
