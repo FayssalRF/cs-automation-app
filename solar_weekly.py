@@ -14,17 +14,18 @@ def solar_weekly_tab():
     if st.button("Hent rapport"):
         if to_date < from_date:
             st.error("Til dato skal være efter fra dato!")
+            return
         elif (to_date - from_date).days > 7:
             st.error("Perioden må ikke være mere end 7 dage!")
+            return
         else:
             url = f"https://moverdatawarehouse.azurewebsites.net/download/routestats?apikey=b48c55&Userid=6016&FromDate={from_date.strftime('%Y-%m-%d')}&ToDate={to_date.strftime('%Y-%m-%d')}"
             st.info("Henter rapport fra: " + url)
             try:
-                # Forøg tidsgrænsen: max_tries er fordoblet fra 10 til 20
-                max_tries = 20
+                max_tries = 10
                 success = False
                 for i in range(max_tries):
-                    time.sleep(3)  # 3 sekunders pause mellem forsøg
+                    time.sleep(10)  # 10 sekunders pause mellem forsøg
                     try:
                         response = requests.get(url, timeout=10)
                         response.raise_for_status()
@@ -36,12 +37,8 @@ def solar_weekly_tab():
                 if not success:
                     st.error("Rapporten kunne ikke hentes inden for tidsgrænsen. Prøv igen senere.")
                     return
-                
-                required_columns_sw = [
-                    "Booking ref.", "Date", "Route ID", "Pick up adress", "Vehicle type", 
-                    "Delivery adress", "Delivery zipcode", "Booking to Mover", 
-                    "Pickup arrival", "Pickup completed", "Delivery completed"
-                ]
+
+                required_columns_sw = ["Booking ref.", "Date", "Route ID", "Pick up adress", "Vehicle type", "Delivery adress", "Delivery zipcode", "Booking to Mover", "Pickup arrival", "Pickup completed", "Delivery completed"]
                 missing_sw = [col for col in required_columns_sw if col not in df_sw.columns]
                 if missing_sw:
                     st.error("Følgende nødvendige kolonner mangler i rapporten: " + ", ".join(missing_sw))
