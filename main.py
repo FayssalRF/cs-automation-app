@@ -19,9 +19,6 @@ if not st.session_state.authenticated:
         else:
             st.error("Forkert adgangskode!")
     st.stop()
-import streamlit as st
-from PIL import Image
-from datetime import date
 
 # Konfigurer siden
 st.set_page_config(
@@ -34,7 +31,6 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* Importér Open Sans */
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
 
     body, .main, p, li, .stMarkdown {
@@ -43,22 +39,10 @@ st.markdown(
         font-weight: 400 !important;
         color: #000 !important;
     }
-    h1 {
-        font-size: 3em !important;
-        font-weight: 400 !important;
-        color: #333333 !important;
-    }
-    h2 {
-        font-size: 2.5em !important;
-        font-weight: 400 !important;
-        color: #333333 !important;
-    }
-    h3 {
-        font-size: 2em !important;
-        font-weight: 400 !important;
-        color: #333333 !important;
-    }
-    /* Primære knapper */
+    h1 { font-size: 3em !important; color: #333333 !important; }
+    h2 { font-size: 2.5em !important; color: #333333 !important; }
+    h3 { font-size: 2em !important; color: #333333 !important; }
+
     .stButton>button {
         font-size: 14pt !important;
         font-weight: 700 !important;
@@ -68,14 +52,11 @@ st.markdown(
         padding: 10px 24px;
         border-radius: 25px;
         cursor: pointer;
-        transition: background-color 0.3s, color 0.3s;
     }
-    /* Labels fra file-uploader */
     .stFileUploader label {
         text-transform: lowercase;
         color: #008080 !important;
     }
-    /* Margin mellem faner */
     [data-baseweb="tab"] {
         margin-right: 30px !important;
     }
@@ -97,15 +78,20 @@ from forside import forside_tab
 from controlling import controlling_tab
 from solar_weekly import solar_weekly_tab
 from solar_co2 import solar_co2_tab
-from revenue import revenue_tab
+from revenue import revenue_tab  # Aktiverer Revenue-fanen
 
 # Opret fanebjælken med 5 faner
-tabs = st.tabs(["Forside", "Controlling Report Analyzer", "Solar Weekly Report", "Solar CO2 Report", "Revenue analyser"])
+tabs = st.tabs([
+    "Forside",
+    "Controlling Report Analyzer",
+    "Solar Weekly Report",
+    "Solar CO2 Report",
+    "Revenue analyser"
+])
 
 with tabs[0]:
     forside_tab()
 with tabs[1]:
-    # Send all_keywords til controlling-tabben
     controlling_tab()
 with tabs[2]:
     solar_weekly_tab()
