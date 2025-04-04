@@ -25,11 +25,14 @@ def revenue_tab():
 
     # Find kolonner med datoer (omsætning) og summer dem som 'Realized Revenue'
     revenue_cols = [col for col in df.columns if isinstance(col, str) and '-' in col]
+    if not revenue_cols:
+        st.warning("Ingen kolonner med datoformat fundet i regnearket.")
+        return
+
     df['Realized Revenue'] = df[revenue_cols].sum(axis=1)
 
-    # Forventet årlig omsætning antages som sum af 12 måneder (kan tilpasses)
+    # Forventet årlig omsætning estimeres ud fra månedsgennemsnit x 12
     df['Expected Revenue'] = df['Realized Revenue'] / len(revenue_cols) * 12
-
     df['Performance %'] = df['Realized Revenue'] / df['Expected Revenue'] * 100
     df['Performance Tag'] = pd.cut(
         df['Performance %'],
@@ -54,11 +57,11 @@ def revenue_tab():
     plt.legend()
     st.pyplot(fig)
 
-    # Samlede tal
+    # Samlede nøgletal
     total_realized = df['Realized Revenue'].sum()
     total_expected = df['Expected Revenue'].sum()
     percent = total_realized / total_expected * 100 if total_expected > 0 else 0
 
     st.metric("📈 Total Realized Revenue", f"{total_realized:,.0f} DKK")
-    st.metric("📊 Forventet Revenue (pro rata)", f"{total_expected:,.0f} DKK")
+    st.metric("📉 Forventet Revenue (pro rata)", f"{total_expected:,.0f} DKK")
     st.metric("⚡ Performance", f"{percent:.1f}%")
