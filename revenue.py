@@ -25,7 +25,7 @@ def revenue_tab():
     date_cols = [col for col in df.columns if isinstance(col, str) and '-' in col]
     df_dates = df[['Company Name', 'Name', 'ID'] + date_cols].copy()
     
-    # Konverter de dato-relaterede kolonner til datetime-objekter
+    # Konverter dato-kolonnerne til datetime-objekter
     try:
         new_date_cols = pd.to_datetime(df_dates.columns[3:], format='%b-%y', errors='coerce')
     except Exception as e:
@@ -65,7 +65,7 @@ def revenue_tab():
     def format_currency(x):
         return "kr. " + f"{x:,.0f}".replace(",", ".")
     
-    # Opret display-DataFrame med formaterede beløb
+    # Opret display-DataFrame med formaterede beløb og procentvis ændring med to decimaler
     df_display = df_filtered[['Company Name', 'ÅTD 2024', 'ÅTD 2025', 'YTD Change %']].sort_values('YTD Change %', ascending=False).copy()
     df_display['ÅTD 2024'] = df_display['ÅTD 2024'].apply(format_currency)
     df_display['ÅTD 2025'] = df_display['ÅTD 2025'].apply(format_currency)
@@ -74,11 +74,11 @@ def revenue_tab():
     st.subheader("ÅTD Revenue Sammenligning")
     st.dataframe(df_display)
     
-    # Forbered graferne
+    # Forbered graferne til stigninger og fald
     top_10 = df_filtered.sort_values('YTD Change %', ascending=False).head(10)
     bottom_10 = df_filtered.sort_values('YTD Change %', ascending=True).head(10)
     
-    # Placer graferne side om side med st.columns
+    # Placer graferne side om side
     col1, col2 = st.columns(2)
     
     with col1:
@@ -87,7 +87,7 @@ def revenue_tab():
         ax_top.barh(top_10['Company Name'], top_10['YTD Change %'])
         ax_top.set_xlabel("YTD Change %")
         ax_top.set_title("Top 10 Stigninger")
-        # Tilføj ekstra padding mellem tick labels på y-aksen
+        # Tilføj ekstra padding mellem y-aksens tick labels
         ax_top.tick_params(axis='y', which='major', pad=15)
         st.pyplot(fig_top, use_container_width=False)
     
@@ -97,7 +97,7 @@ def revenue_tab():
         ax_bottom.barh(bottom_10['Company Name'], bottom_10['YTD Change %'])
         ax_bottom.set_xlabel("YTD Change %")
         ax_bottom.set_title("Top 10 Fald")
-        # Tilføj ekstra padding mellem tick labels på y-aksen
+        # Tilføj ekstra padding mellem y-aksens tick labels
         ax_bottom.tick_params(axis='y', which='major', pad=15)
         st.pyplot(fig_bottom, use_container_width=False)
     
