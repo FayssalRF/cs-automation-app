@@ -10,8 +10,6 @@ def revenue_tab():
         st.info("Upload en Excel-fil for at starte analysen.")
         return
 
-    # (Her følger samme indlæsning og databehandling som før) -----------------
-    # Eksempel-kode:
     try:
         xls = pd.ExcelFile(uploaded_file)
         df = xls.parse("Revenue", skiprows=4)
@@ -65,75 +63,45 @@ def revenue_tab():
     st.subheader("ÅTD Revenue Sammenligning")
     st.dataframe(df_display)
 
-    # Top/bottom 10
-    top_10 = df_filtered.sort_values('YTD Change %', ascending=False).head(10)
-    bottom_10 = df_filtered.sort_values('YTD Change %', ascending=True).head(10)
+    # Brug kun top 5 og bottom 5
+    top_5 = df_filtered.sort_values('YTD Change %', ascending=False).head(5)
+    bottom_5 = df_filtered.sort_values('YTD Change %', ascending=True).head(5)
 
     # Vælg en stil
     plt.style.use('ggplot')
 
-    # Kolonner til de to grafer
+    # Placer graferne side om side
     col1, col2 = st.columns(2)
 
-    # --- GRAF: Top 10 stigninger ---
     with col1:
-        st.subheader("Top 10 virksomheder - YTD Change % (Stigninger)")
-        fig_top, ax_top = plt.subplots(figsize=(6, 4))  # Større figur
-        bars_top = ax_top.barh(top_10['Company Name'], top_10['YTD Change %'], color='#4CAF50')
+        st.subheader("Top 5 virksomheder - YTD Change % (Stigninger)")
+        fig_top, ax_top = plt.subplots(figsize=(6, 4))
+        bars_top = ax_top.barh(top_5['Company Name'], top_5['YTD Change %'], color='#4CAF50')
         
         ax_top.set_xlabel("YTD Change %", fontsize=11, labelpad=10)
-        ax_top.set_title("Top 10 Stigninger", fontsize=13, pad=10)
-        # Reducér labelsize og y-pad en smule, hvis navnene er lange
-        ax_top.tick_params(axis='y', labelsize=9, pad=5)
-        # Gridlines på x-aksen
+        ax_top.set_title("Top 5 Stigninger", fontsize=13, pad=10)
+        ax_top.tick_params(axis='y', labelsize=9, pad=50)
         ax_top.grid(True, axis='x', linestyle='--', alpha=0.7)
-        
-        # Placér tekstetiketten alt efter om værdien er positiv/negativ
         for bar in bars_top:
             width = bar.get_width()
-            label_text = f"{width:.2f}%"
-            # Lidt afstand fra stolpen
-            offset = 2
-            if width < 0:
-                # Placér til venstre for negative værdier
-                ax_top.text(width - offset, bar.get_y() + bar.get_height()/2,
-                            label_text, va='center', ha='right', fontsize=9)
-            else:
-                # Placér til højre for positive værdier
-                ax_top.text(width + offset, bar.get_y() + bar.get_height()/2,
-                            label_text, va='center', ha='left', fontsize=9)
-        
+            ax_top.text(width + 2, bar.get_y() + bar.get_height()/2, f"{width:.2f}%", va='center', fontsize=9)
         st.pyplot(fig_top, use_container_width=False)
 
-    # --- GRAF: Top 10 fald ---
     with col2:
-        st.subheader("Top 10 virksomheder - YTD Change % (Fald)")
-        fig_bottom, ax_bottom = plt.subplots(figsize=(6, 4))  # Større figur
-        bars_bottom = ax_bottom.barh(bottom_10['Company Name'], bottom_10['YTD Change %'], color='#F44336')
+        st.subheader("Top 5 virksomheder - YTD Change % (Fald)")
+        fig_bottom, ax_bottom = plt.subplots(figsize=(6, 4))
+        bars_bottom = ax_bottom.barh(bottom_5['Company Name'], bottom_5['YTD Change %'], color='#F44336')
         
         ax_bottom.set_xlabel("YTD Change %", fontsize=11, labelpad=10)
-        ax_bottom.set_title("Top 10 Fald", fontsize=13, pad=10)
-        ax_bottom.tick_params(axis='y', labelsize=9, pad=5)
+        ax_bottom.set_title("Top 5 Fald", fontsize=13, pad=10)
+        ax_bottom.tick_params(axis='y', labelsize=9, pad=50)
         ax_bottom.grid(True, axis='x', linestyle='--', alpha=0.7)
-        
-        # Sørg for, at negative værdier ikke klippes – fx ved at sætte x-limits
-        min_val = bottom_10['YTD Change %'].min()
-        max_val = bottom_10['YTD Change %'].max()
-        # Hvis den mest negative værdi fx er -80, giver vi lidt margin
+        min_val = bottom_5['YTD Change %'].min()
+        max_val = bottom_5['YTD Change %'].max()
         ax_bottom.set_xlim(min_val - 5, max_val + 5)
-
         for bar in bars_bottom:
             width = bar.get_width()
-            label_text = f"{width:.2f}%"
-            offset = 2
-            if width < 0:
-                ax_bottom.text(width - offset, bar.get_y() + bar.get_height()/2,
-                               label_text, va='center', ha='right', fontsize=9)
-            else:
-                ax_bottom.text(width + offset, bar.get_y() + bar.get_height()/2,
-                               label_text, va='center', ha='left', fontsize=9)
-        
+            ax_bottom.text(width + 2, bar.get_y() + bar.get_height()/2, f"{width:.2f}%", va='center', fontsize=9)
         st.pyplot(fig_bottom, use_container_width=False)
 
-    # Antal virksomheder
     st.metric("Antal virksomheder analyseret", f"{len(df_filtered)}")
