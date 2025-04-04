@@ -19,34 +19,34 @@ def solar_weekly_tab():
             st.error("Perioden må ikke være mere end 7 dage!")
             return
         
-        # Konstruer URL'en med de valgte datoer
         url = f"https://moverdatawarehouse.azurewebsites.net/download/routestats?apikey=b48c55&Userid=6016&FromDate={from_date.strftime('%Y-%m-%d')}&ToDate={to_date.strftime('%Y-%m-%d')}"
         st.info("Henter rapport fra: " + url)
-        
         try:
-            # Øg timeout til 30 sekunder
-            response = requests.get(url, timeout=30)
-            
-            # Log HTTP statuskode og headers
-            st.write("HTTP Status Code:", response.status_code)
-            st.write("Response Headers:", response.headers)
-            
-            if not response.ok:
-                st.error("Forespørgslen mislykkedes. Status kode: " + str(response.status_code))
+            max_tries = 10
+            success = False
+            df_sw = None
+            for i in range(max_tries):
+                time.sleep(10)  # 10 sekunders pause mellem forsøg
+                try:
+                    response = requests.get(url, timeout=30)
+                    response.raise_for_status()
+                    st.write("HTTP Status Code:", response.status_code)
+                    st.write("Response Headers:", response.headers)
+                    # Tjek om Content-Type indikerer HTML
+                    content_type = response.headers.get("Content-Type", "").lower()
+                    if "html" in content_type:
+                        st.info(f"Forsøg {i+1} af {max_tries}: Modtaget indhold er HTML, rapporten er endnu ikke klar...")
+                        continue
+                    # Forsøg at læse Excel-data
+                    df_sw = pd.read_excel(io.BytesIO(response.content), engine='openpyxl')
+                    success = True
+                    break
+                except Exception as e:
+                    st.info(f"Forsøg {i+1} af {max_tries}: Rapporten er endnu ikke klar...")
+            if not success:
+                st.error("Rapporten kunne ikke hentes inden for tidsgrænsen. Prøv igen senere.")
                 return
-            
-            # Tjek om responsen indeholder data
-            if len(response.content) == 0:
-                st.error("Responsen er tom, filen kunne ikke hentes.")
-                return
-            
-            # Forsøg at læse Excel-data med openpyxl
-            try:
-                df_sw = pd.read_excel(io.BytesIO(response.content), engine='openpyxl')
-            except Exception as e:
-                st.error("Fejl ved læsning af Excel-fil: " + str(e))
-                return
-            
+
             required_columns_sw = [
                 "Booking ref.", "Date", "Route ID", "Pick up adress", "Vehicle type",
                 "Delivery adress", "Delivery zipcode", "Booking to Mover", 
@@ -55,22 +55,21 @@ def solar_weekly_tab():
             missing_sw = [col for col in required_columns_sw if col not in df_sw.columns]
             if missing_sw:
                 st.error("Følgende nødvendige kolonner mangler i rapporten: " + ", ".join(missing_sw))
-                return
-            
-            df_final_sw = df_sw[required_columns_sw]
-            st.success("Rapporten er hentet!")
-            st.dataframe(df_final_sw)
-            
-            towrite_sw = io.BytesIO()
-            with pd.ExcelWriter(towrite_sw, engine='xlsxwriter') as writer:
-                df_final_sw.to_excel(writer, index=False, sheet_name='SolarWeeklyReport')
-            towrite_sw.seek(0)
-            
-            st.download_button(
-                label="Download Solar Weekly Report",
-                data=towrite_sw,
-                file_name="solar_weekly_report.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            else:
+                df_final_sw = df_sw[required_columns_sw]
+                st.success("Rapporten er hentet!")
+                st.dataframe(df_final_sw)
+                
+                towrite_sw = io.BytesIO()
+                with pd.ExcelWriter(towrite_sw, engine='xlsxwriter') as writer:
+                    df_final_sw.to_excel(writer, index=False, sheet_name='SolarWeeklyReport')
+                towrite_sw.seek(0)
+                
+                st.download_button(
+                    label="Download Solar Weekly Report",
+                    data=towrite_sw,
+                    file_name="solar_weekly_report.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
         except Exception as e:
             st.error("Fejl ved hentning af rapport: " + str(e))
