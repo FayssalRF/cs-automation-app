@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 def revenue_tab():
-    st.header("\ud83d\udcb8 Revenue analyser")
+    st.header("💸 Revenue analyser")
 
     uploaded_file = st.file_uploader("Upload revenue-rapport (Excel)", type=["xlsx"])
     if not uploaded_file:
