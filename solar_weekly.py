@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import io
-import matplotlib.pyplot as plt
 from datetime import date
 
 def solar_weekly_tab():
@@ -22,14 +21,13 @@ def solar_weekly_tab():
         st.error("❌ Perioden må ikke være mere end 7 dage!")
         return
 
-    # 2. Producer datawarehouse-linket
+    # 2. Generer datawarehouse-linket
     base_url = "https://moverdatawarehouse.azurewebsites.net/download/routestats"
     generated_url = (
         f"{base_url}?apikey=b48c55&Userid=6016"
         f"&FromDate={from_date.strftime('%Y-%m-%d')}"
         f"&ToDate={to_date.strftime('%Y-%m-%d')}"
     )
-    
     st.markdown("### 2. Download link til rapport")
     st.markdown(f"[Download rapport]({generated_url})", unsafe_allow_html=True)
     st.info("Når du klikker på linket, downloades rapporten i .xlsx format.")
@@ -40,53 +38,75 @@ def solar_weekly_tab():
     
     if uploaded_file:
         try:
-            df = pd.read_excel(uploaded_file, engine='openpyxl')
+            df = pd.read_excel(uploaded_file, engine="openpyxl")
             
-            # Krævede kolonner – her antages at "Booking ref." fungerer som delivery reference
-            required_columns = [
-                "Booking ref.", "Date", "Route ID", "Driver ID", "Pick up adress",
-                "Vehicle type", "Delivery adress", "Delivery zipcode", "Booking to Mover",
-                "Pickup arrival", "Pickup completed", "Delivery completed"
-            ]
-            missing = [col for col in required_columns if col not in df.columns]
-            if missing:
-                st.error("Følgende kolonner mangler i uploadet fil: " + ", ".join(missing))
+            # Forventede kolonner (baseret på deres position):
+            # Kolonne A: Stop ID
+            # Kolonne B: ADDRESS REFERENCE  --> Booking ref.
+            # Kolonne C: Route ID         --> Route ID
+            # Kolonne D: RUTE REFERENCE
+            # Kolonne E: BOOKING RECEIVED --> Booking to Mover
+            # Kolonne F: Driver ID        --> Driver ID
+            # Kolonne G: Vehicle          --> Vehicle type
+            # Kolonne H: Date             --> Date
+            # Kolonne I: Rank
+            # Kolonne J: ADDRESS          --> Pickup adress (hvis StopType == "Pickup") eller Delivery adress (hvis StopType == "Delivery")
+            # Kolonne K: ZIPCODE          --> Delivery zipcode
+            # ...
+            # Kolonne AD: StopType        --> angiver "Pickup" eller "Delivery"
+            # Kolonne N: ARRIVED          --> Pickup arrival (hvis Pickup)
+            # Kolonne O: COMPLETED        --> Pickup completed (hvis Pickup) eller Delivery completed (hvis Delivery)
+            
+            # Fjern rækker, hvor "ADDRESS REFERENCE" (kolonne B) er tom
+            df = df.dropna(subset=["ADDRESS REFERENCE"])
+            
+            final_rows = []
+            # Gruppér efter "ADDRESS REFERENCE" (Booking ref.)
+            for ref, group in df.groupby("ADDRESS REFERENCE"):
+                # For hver gruppe: find rækken med Pickup og rækken med Delivery baseret på StopType (kolonne AD)
+                pickup = group[group["StopType"].str.strip().str.lower() == "pickup"]
+                delivery = group[group["StopType"].str.strip().str.lower() == "delivery"]
+                
+                if pickup.empty or delivery.empty:
+                    continue  # spring denne reference over, hvis data mangler
+                
+                pickup_row = pickup.iloc[0]
+                delivery_row = delivery.iloc[0]
+                
+                final_row = {
+                    "Booking ref.": pickup_row["ADDRESS REFERENCE"],
+                    "Date": pickup_row["Date"],
+                    "Route ID": pickup_row["Route ID"],
+                    "Driver ID": pickup_row["Driver ID"],
+                    "Pick up adress": pickup_row["ADDRESS"],
+                    "Vehicle type": pickup_row["Vehicle"],
+                    "Delivery adress": delivery_row["ADDRESS"],
+                    "Delivery zipcode": delivery_row["ZIPCODE"],
+                    "Booking to Mover": pickup_row["BOOKING RECEIVED"],
+                    "Pickup arrival": pickup_row["ARRIVED"],
+                    "Pickup completed": pickup_row["COMPLETED"],
+                    "Delivery completed": delivery_row["COMPLETED"]
+                }
+                final_rows.append(final_row)
+            
+            if not final_rows:
+                st.error("Ingen gyldige rækker fundet med både Pickup og Delivery data.")
                 return
             
-            # Filtrer til de nødvendige kolonner
-            df_filtered = df[required_columns].copy()
+            final_report = pd.DataFrame(final_rows)
             
-            # Sorter efter delivery reference (Booking ref.) i stigende rækkefølge
-            df_filtered.sort_values("Booking ref.", inplace=True, ascending=True)
+            # Konverter Booking ref. til numerisk og sorter fra laveste til højeste
+            final_report["Booking ref."] = pd.to_numeric(final_report["Booking ref."], errors="coerce")
+            final_report = final_report.dropna(subset=["Booking ref."])
+            final_report.sort_values("Booking ref.", inplace=True)
             
-            # Fjern "Booking ref." fra output – den endelige rapport skal kun indeholde:
-            # Date, Route ID, Driver ID, Pick up adress, Vehicle type, Delivery adress,
-            # Delivery zipcode, Booking to Mover, Pickup arrival, Pickup completed, Delivery completed
-            final_report = df_filtered.drop(columns=["Booking ref."])
-            
-            st.success("✅ Filen er valid og indlæst korrekt.")
+            st.success("✅ Filen er valid og analyseret korrekt.")
             st.dataframe(final_report)
             
-            # Dataanalyse: Beskrivende statistik
-            st.markdown("#### Data Analyse")
-            st.write("Beskrivende statistik:")
-            st.write(final_report.describe(include='all'))
-            
-            # Plot af antal bookinger per dag (baseret på 'Date')
-            if 'Date' in final_report.columns:
-                final_report['Date'] = pd.to_datetime(final_report['Date'], errors='coerce')
-                bookings_per_date = final_report.groupby('Date').size().reset_index(name='Antal Bookinger')
-                fig, ax = plt.subplots()
-                ax.plot(bookings_per_date['Date'], bookings_per_date['Antal Bookinger'], marker='o')
-                ax.set_title("Antal Bookinger per Dag")
-                ax.set_xlabel("Dato")
-                ax.set_ylabel("Antal Bookinger")
-                st.pyplot(fig)
-            
-            # Download-knap for den filtrerede rapport med de ønskede kolonner
+            # Download-knap for den endelige rapport
             towrite = io.BytesIO()
-            with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
-                final_report.to_excel(writer, index=False, sheet_name='SolarWeeklyReport')
+            with pd.ExcelWriter(towrite, engine="xlsxwriter") as writer:
+                final_report.to_excel(writer, index=False, sheet_name="SolarWeeklyReport")
             towrite.seek(0)
             st.download_button(
                 label="Download filtreret Solar Weekly Report",
@@ -94,5 +114,6 @@ def solar_weekly_tab():
                 file_name="solar_weekly_report_filtered.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+            
         except Exception as e:
-            st.error(f"Fejl under indlæsning af fil: {e}")
+            st.error(f"Fejl under indlæsning og analyse af fil: {e}")
