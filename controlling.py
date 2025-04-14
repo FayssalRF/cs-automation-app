@@ -67,15 +67,15 @@ def controlling_tab():
             st.markdown("#### Overordnede analyserede resultater:")
             st.dataframe(df[output_cols])
             
-            # Opret en separat tabel for hver unik kunde
+            # Opret en separat tabel for hver unik kunde, kun med resultater hvor Keywords = "Ja"
             unique_customers = sorted(df["CustomerName"].unique())
-            st.markdown("#### Resultater per kunde:")
+            st.markdown("#### Resultater per kunde (kun med ekstra tid):")
             for customer in unique_customers:
                 st.subheader(f"Kunde: {customer}")
-                df_customer = df[df["CustomerName"] == customer]
+                df_customer = df[(df["CustomerName"] == customer) & (df["Keywords"] == "Ja")]
                 st.dataframe(df_customer[output_cols])
             
-            # Gemmer samlet analyseret fil til download
+            # Gem samlet analyseret fil til download
             towrite = io.BytesIO()
             with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Analyseret')
