@@ -5,7 +5,7 @@ import openpyxl
 from datetime import date, timedelta
 
 def solar_weekly_tab():
-    st.title("Solar Weekly Report")
+    st.title("Solar Weekly Report (UNDER UDVIKLING)")
     
     # Beregn forrige uge (fx den uge, hvor rapporten skal laves)
     today = date.today()
