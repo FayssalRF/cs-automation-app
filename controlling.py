@@ -32,10 +32,11 @@ def controlling_tab():
     last_week_str = last_week_date.strftime("%Y") + f"{last_week_date.isocalendar()[1]:02d}"
     data_link = f"https://moverdatawarehouse.azurewebsites.net/download/DurationControlling?apikey=2d633b&Userid=74859&Yearweek={last_week_str}"
     
-    # Indsæt linket med teksten for sidste uge, f.eks. "Download Controlling report for sidste uge (2025-35)"
+    # Indsæt linket med den ønskede tekst, f.eks. "Download Controlling report for sidste uge (2025-35)"
     st.markdown(f"[Download Controlling report for sidste uge (2025-{last_week_date.isocalendar()[1]:02d})]({data_link})")
     
-    st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord.")
+    st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
+    st.write("- SessionId, Date, CustomerId, CustomerName, EstDuration, ActDuration, DurationDifference, SupportNote")
     
     uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"], key="controlling")
     if uploaded_file is not None:
@@ -58,15 +59,20 @@ def controlling_tab():
             df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
             st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
             
-            # Påfør analysen og tilføj kolonner for keywords
+            # Anvend analysen og tilføj kolonner for keywords
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
+            
+            # Formatter "Date" kolonnen til kort dato format "DD-MM-ÅÅÅÅ"
+            df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
+            
             output_cols = ["SessionId", "Date", "CustomerId", "CustomerName", "EstDuration", "ActDuration", "DurationDifference", "SupportNote", "Keywords", "MatchingKeyword"]
             
+            # Overordnet visning: Alle resultater
             st.markdown("#### Overordnede analyserede resultater:")
             st.dataframe(df[output_cols])
             
-            # Opret en separat tabel for hver unik kunde, kun med resultater hvor Keywords = "Ja"
+            # Opret en separat tabel for hver unik kunde (kun med rækker hvor Keywords = "Ja")
             unique_customers = sorted(df["CustomerName"].unique())
             st.markdown("#### Resultater per kunde (kun med ekstra tid):")
             for customer in unique_customers:
