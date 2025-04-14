@@ -7,39 +7,34 @@ from datetime import date, timedelta
 def solar_weekly_tab():
     st.title("Solar Weekly Report (UNDER UDVIKLING)")
 
-     # 1. Vælg en periode (maks 7 dage)
-    st.markdown("### 1. Vælg en periode (maks 7 dage)")
-    col1, col2 = st.columns(2)
-    with col1:
-        from_date = st.date_input("Fra dato", value=date(2025, 1, 1), key="sw_from")
-    with col2:
-        to_date = st.date_input("Til dato", value=date(2025, 1, 7), key="sw_to")
-    
-    if to_date < from_date:
-        st.error("❌ Til dato skal være efter fra dato!")
-        return
-    if (to_date - from_date).days > 7:
-        st.error("❌ Perioden må ikke være mere end 7 dage!")
-        return
-
-    # 2. Generer datawarehouse-linket baseret på de valgte datoer
-    base_url = "https://moverdatawarehouse.azurewebsites.net/download/routestats"
-    generated_url = (
-        f"{base_url}?apikey=b48c55&Userid=6016"
-        f"&FromDate={from_date.strftime('%Y-%m-%d')}"
-        f"&ToDate={to_date.strftime('%Y-%m-%d')}"
-    )
-    st.markdown("### 2. Download link til rapport")
-    st.markdown(f"[Download rapport]({generated_url})", unsafe_allow_html=True)
-    st.info("Når du klikker på linket, downloades rapporten i .xlsx format.")
-    
-    # Beregn forrige uge (fx den uge, hvor rapporten skal laves)
+     # Beregn forrige uge – vi antager, at ugen starter på mandag og slutter på søndag
     today = date.today()
-    last_week_date = today - timedelta(days=7)
-    week_number = last_week_date.isocalendar()[1]
+    # Find dagens ugedag (mandag=0, søndag=6)
+    current_weekday = today.weekday()
+    # Find mandag i den aktuelle uge
+    this_monday = today - timedelta(days=current_weekday)
+    # Beregn mandag i forrige uge
+    last_monday = this_monday - timedelta(days=7)
+    # Beregn søndag i forrige uge
+    last_sunday = last_monday + timedelta(days=6)
+    
+    # Udregn uge nummer ud fra mandag i forrige uge
+    week_number = last_monday.isocalendar()[1]
     week_str = f"Uge {week_number:02d}"
     
     st.markdown(f"### Rapport for {week_str}")
+    st.write(f"Automatisk valgt periode: {last_monday.strftime('%Y-%m-%d')} til {last_sunday.strftime('%Y-%m-%d')}")
+    
+    # Generer datawarehouse-linket baseret på den udregnede periode
+    base_url = "https://moverdatawarehouse.azurewebsites.net/download/routestats"
+    generated_url = (
+        f"{base_url}?apikey=b48c55&Userid=6016"
+        f"&FromDate={last_monday.strftime('%Y-%m-%d')}"
+        f"&ToDate={last_sunday.strftime('%Y-%m-%d')}"
+    )
+    st.markdown("### Download link til rapport")
+    st.markdown(f"[Download rapport]({generated_url})", unsafe_allow_html=True)
+    st.info("Når du klikker på linket, downloades rapporten i .xlsx format.")
 
     # Upload datafilen med ruteinfo
     st.markdown(" ")
