@@ -13,7 +13,7 @@ if not st.session_state.authenticated:
     st.title("Login")
     password = st.text_input("Indtast adgangskode", type="password")
     if st.button("Login"):
-        if password == "CSlikestomoveitmoveit123":  # Ændr denne kode til din ønskede adgangskode
+        if password == "CSmover123":  # Ændr denne kode til din ønskede adgangskode
             st.session_state.authenticated = True
             st.success("Adgangskode korrekt!")
         else:
