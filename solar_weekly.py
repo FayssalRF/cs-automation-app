@@ -6,6 +6,32 @@ from datetime import date, timedelta
 
 def solar_weekly_tab():
     st.title("Solar Weekly Report (UNDER UDVIKLING)")
+
+     # 1. Vælg en periode (maks 7 dage)
+    st.markdown("### 1. Vælg en periode (maks 7 dage)")
+    col1, col2 = st.columns(2)
+    with col1:
+        from_date = st.date_input("Fra dato", value=date(2025, 1, 1), key="sw_from")
+    with col2:
+        to_date = st.date_input("Til dato", value=date(2025, 1, 7), key="sw_to")
+    
+    if to_date < from_date:
+        st.error("❌ Til dato skal være efter fra dato!")
+        return
+    if (to_date - from_date).days > 7:
+        st.error("❌ Perioden må ikke være mere end 7 dage!")
+        return
+
+    # 2. Generer datawarehouse-linket baseret på de valgte datoer
+    base_url = "https://moverdatawarehouse.azurewebsites.net/download/routestats"
+    generated_url = (
+        f"{base_url}?apikey=b48c55&Userid=6016"
+        f"&FromDate={from_date.strftime('%Y-%m-%d')}"
+        f"&ToDate={to_date.strftime('%Y-%m-%d')}"
+    )
+    st.markdown("### 2. Download link til rapport")
+    st.markdown(f"[Download rapport]({generated_url})", unsafe_allow_html=True)
+    st.info("Når du klikker på linket, downloades rapporten i .xlsx format.")
     
     # Beregn forrige uge (fx den uge, hvor rapporten skal laves)
     today = date.today()
