@@ -68,7 +68,7 @@ def solar_weekly_tab():
             st.write("Unikke RUTE REFERENCE værdier:", unique_refs)
             
             # Åbn Excel-template-filen med den ønskede formatering og formler (f.eks. "TEMPLATE SHORT - Solar weekly report uge XX (formler).xlsx")
-            template_path = "/mnt/data/TEMPLATE SHORT - Solar weekly report uge XX (formler).xlsx"
+            template_path = "TEMPLATE SHORT - Solar weekly report uge XX (formler).xlsx"
             wb = openpyxl.load_workbook(template_path)
             
             # Arbejd i fanen "Uge xx" – tjek at den findes
