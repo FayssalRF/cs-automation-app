@@ -16,8 +16,8 @@ def solar_weekly_tab():
     st.markdown(f"### Rapport for {week_str}")
 
     # Upload datafilen med ruteinfo
-    st.markdown("Upload datafil (Excel)")
-    uploaded_file = st.file_uploader("Upload", type=["xlsx"], key="data_routestats")
+    st.markdown(" ")
+    uploaded_file = st.file_uploader("Upload datafil (Excel)", type=["xlsx"], key="data_routestats")
     
     if uploaded_file:
         try:
