@@ -32,7 +32,7 @@ def controlling_tab():
     last_week_str = last_week_date.strftime("%Y") + f"{last_week_date.isocalendar()[1]:02d}"
     data_link = f"https://moverdatawarehouse.azurewebsites.net/download/DurationControlling?apikey=2d633b&Userid=74859&Yearweek={last_week_str}"
     
-    # Indsæt linket med den ønskede tekst, f.eks. "Download Controlling report for sidste uge (2025-35)"
+    # Indsæt linket med den ønskede tekst, fx "Download Controlling report for sidste uge (2025-35)"
     st.markdown(f"[Download Controlling report for sidste uge (2025-{last_week_date.isocalendar()[1]:02d})]({data_link})")
     
     st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
@@ -59,11 +59,11 @@ def controlling_tab():
             df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
             st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
             
-            # Anvend analysen og tilføj kolonner for keywords
+            # Påfør analysen og tilføj kolonner for keywords
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
             
-            # Formatter "Date" kolonnen til kort dato format "DD-MM-ÅÅÅÅ"
+            # Formatter "Date"-kolonnen til kort datoformat "DD-MM-ÅÅÅÅ"
             df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
             
             output_cols = ["SessionId", "Date", "CustomerId", "CustomerName", "EstDuration", "ActDuration", "DurationDifference", "SupportNote", "Keywords", "MatchingKeyword"]
@@ -72,13 +72,16 @@ def controlling_tab():
             st.markdown("#### Overordnede analyserede resultater:")
             st.dataframe(df[output_cols])
             
-            # Opret en separat tabel for hver unik kunde (kun med rækker hvor Keywords = "Ja")
+            # Opret kollapsible sektioner for hver unik kunde med kun resultater hvor Keywords = "Ja"
             unique_customers = sorted(df["CustomerName"].unique())
             st.markdown("#### Resultater per kunde (kun med ekstra tid):")
             for customer in unique_customers:
-                st.subheader(f"Kunde: {customer}")
-                df_customer = df[(df["CustomerName"] == customer) & (df["Keywords"] == "Ja")]
-                st.dataframe(df_customer[output_cols])
+                # Omslut kundedata i en expander (kollapsible sektion)
+                with st.expander(f"Kunde: {customer}"):
+                    # Overskrift med fast fontstørrelse 14px
+                    st.markdown(f'<h4 style="font-size:14px;">Kunde: {customer}</h4>', unsafe_allow_html=True)
+                    df_customer = df[(df["CustomerName"] == customer) & (df["Keywords"] == "Ja")]
+                    st.dataframe(df_customer[output_cols])
             
             # Gem samlet analyseret fil til download
             towrite = io.BytesIO()
