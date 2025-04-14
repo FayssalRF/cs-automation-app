@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+from datetime import date
 
 # Indlæs keywords fra keywords.txt (dette kan også placeres i en fælles utils.py, hvis ønsket)
 try:
@@ -24,6 +25,14 @@ def analyse_supportnote(note):
 def controlling_tab():
     st.title("Controlling Report Analyse")
     st.markdown("### Velkommen til appen til analyse af controlling rapporter")
+    
+    # Tilføj link til datawarehouse før filupload-komponenten
+    today = date.today()
+    # Udregn Yearweek, fx "202431" (året + to-cifret uge)
+    year_week = today.strftime("%Y") + f"{today.isocalendar()[1]:02d}"
+    data_link = f"https://moverdatawarehouse.azurewebsites.net/download/DurationControlling?apikey=2d633b&Userid=74859&Yearweek={year_week}"
+    st.markdown(f"[Download data fra datawarehouse for denne uge ({year_week})]({data_link})")
+    
     st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
     st.write("- SessionId, Date, CustomerId, CustomerName, EstDuration, ActDuration, DurationDifference, SupportNote")
     
