@@ -6,26 +6,22 @@ from datetime import date, timedelta
 
 def solar_weekly_tab():
     st.title("Solar Weekly Report (UNDER UDVIKLING)")
-
-     # Beregn forrige uge – vi antager, at ugen starter på mandag og slutter på søndag
+    
+    # Beregn forrige uge – antag at ugen starter mandag og slutter søndag
     today = date.today()
-    # Find dagens ugedag (mandag=0, søndag=6)
-    current_weekday = today.weekday()
-    # Find mandag i den aktuelle uge
+    current_weekday = today.weekday()  # mandag=0, søndag=6
     this_monday = today - timedelta(days=current_weekday)
-    # Beregn mandag i forrige uge
     last_monday = this_monday - timedelta(days=7)
-    # Beregn søndag i forrige uge
     last_sunday = last_monday + timedelta(days=6)
     
-    # Udregn uge nummer ud fra mandag i forrige uge
+    # Udregn ugenummer ud fra forrige uges mandag
     week_number = last_monday.isocalendar()[1]
     week_str = f"Uge {week_number:02d}"
     
     st.markdown(f"### Rapport for {week_str}")
-    st.write(f"Automatisk valgt periode: {last_monday.strftime('%Y-%m-%d')} til {last_sunday.strftime('%Y-%m-%d')}")
+    st.write(f"Valgt periode: {last_monday.strftime('%Y-%m-%d')} til {last_sunday.strftime('%Y-%m-%d')}")
     
-    # Generer datawarehouse-linket baseret på den udregnede periode
+    # Generer datawarehouse-linket baseret på den automatiske periode
     base_url = "https://moverdatawarehouse.azurewebsites.net/download/routestats"
     generated_url = (
         f"{base_url}?apikey=b48c55&Userid=6016"
@@ -35,117 +31,71 @@ def solar_weekly_tab():
     st.markdown("### Download link til rapport")
     st.markdown(f"[Download rapport]({generated_url})", unsafe_allow_html=True)
     st.info("Når du klikker på linket, downloades rapporten i .xlsx format.")
-
-    # Upload datafilen med ruteinfo
-    st.markdown(" ")
-    uploaded_file = st.file_uploader("Upload datafil (Excel)", type=["xlsx"], key="data_routestats")
+    
+    # 3. Upload den hentede Excel-rapport
+    st.markdown("### Upload den hentede Excel-rapport")
+    uploaded_file = st.file_uploader("Upload Solar Weekly Excel-fil", type=["xlsx"], key="sw_upload")
     
     if uploaded_file:
         try:
-            # Læs den uploadede fil (forventet med standard headers)
             df = pd.read_excel(uploaded_file, engine="openpyxl")
             
-            # Tjek at kolonnen "STATUS" findes
-            if "STATUS" not in df.columns:
-                st.error("Kolonnen 'STATUS' findes ikke i den uploadede fil.")
+            # Drop rækker hvor 'ADDRESS REFERENCE' er tom
+            df = df.dropna(subset=["ADDRESS REFERENCE"])
+            
+            final_rows = []
+            # Gruppér efter "ADDRESS REFERENCE" (Booking ref.) og udtræk data for Pickup og Delivery
+            for ref, group in df.groupby("ADDRESS REFERENCE"):
+                pickup = group[group["StopType"].str.strip().str.lower() == "pickup"]
+                delivery = group[group["StopType"].str.strip().str.lower() == "delivery"]
+                
+                if pickup.empty or delivery.empty:
+                    continue  # Spring over grupper uden begge typer data
+                
+                pickup_row = pickup.iloc[0]
+                delivery_row = delivery.iloc[0]
+                
+                final_row = {
+                    "Booking ref.": pickup_row["ADDRESS REFERENCE"],
+                    "Date": pickup_row["Date"],
+                    "Route ID": pickup_row["Route ID"],
+                    "Driver ID": pickup_row["Driver ID"],
+                    "Pick up adress": pickup_row["ADDRESS"],
+                    "Vehicle type": pickup_row["Vehicle"],
+                    "Delivery adress": delivery_row["ADDRESS"],
+                    "Delivery zipcode": delivery_row["ZIPCODE"],
+                    "Booking to Mover": pickup_row["BOOKING RECEIVED"],
+                    "Pickup arrival": pickup_row["ARRIVED"],
+                    "Pickup completed": pickup_row["COMPLETED"],
+                    "Delivery completed": delivery_row["COMPLETED"]
+                }
+                final_rows.append(final_row)
+            
+            if not final_rows:
+                st.error("Ingen gyldige rækker fundet med både Pickup og Delivery data.")
                 return
             
-            # Bevar kun rækker, hvor STATUS er "Completed" (case-insensitive)
-            df = df[df["STATUS"].astype(str).str.strip().str.lower() == "completed"]
-            if df.empty:
-                st.error("Ingen rækker med STATUS 'Completed' fundet.")
-                return
+            final_report = pd.DataFrame(final_rows)
             
-            # Forvent, at kolonner B, C og D skal formateres til numre.
-            # Hvis vi antager, at den første række med header er på række 0 og:
-            # - Kolonne B: df.columns[1]
-            # - Kolonne C: df.columns[2]
-            # - Kolonne D: df.columns[3] med header "RUTE REFERENCE"
-            try:
-                col_B = df.columns[1]
-                col_C = df.columns[2]
-                col_D = df.columns[3]  # Forventer "RUTE REFERENCE"
-            except Exception as e:
-                st.error("Datafilen har ikke mindst 4 kolonner, så konvertering af B, C og D kunne ikke udføres.")
-                return
+            # Konverter Booking ref. til numerisk og sorter fra laveste til højeste
+            final_report["Booking ref."] = pd.to_numeric(final_report["Booking ref."], errors="coerce")
+            final_report = final_report.dropna(subset=["Booking ref."])
+            final_report.sort_values("Booking ref.", inplace=True)
             
-            df[col_B] = pd.to_numeric(df[col_B], errors="coerce")
-            df[col_C] = pd.to_numeric(df[col_C], errors="coerce")
-            df[col_D] = pd.to_numeric(df[col_D], errors="coerce")
+            st.success("✅ Filen er valid og analyseret korrekt.")
+            st.dataframe(final_report)
             
-            # Filtrer på RUTE REFERENCE - behold kun de tal der starter med "80"
-            df = df[df[col_D].astype(str).str.startswith("80")]
-            if df.empty:
-                st.error("Ingen rækker med RUTE REFERENCE der starter med '80' fundet.")
-                return
-            
-            # Sorter på RUTE REFERENCE (fra mindst til størst)
-            df = df.sort_values(by=col_D)
-            
-            # Udtræk unikke værdier fra kolonne D ("RUTE REFERENCE")
-            unique_refs = df[col_D].drop_duplicates().tolist()
-            
-            st.success("Data er filtreret og sorteret korrekt.")
-            st.write("Unikke RUTE REFERENCE værdier:", unique_refs)
-            
-            # Åbn Excel-template-filen med den ønskede formatering og formler (f.eks. "TEMPLATE SHORT - Solar weekly report uge XX (formler).xlsx")
-            template_path = "TEMPLATE SHORT - Solar weekly report uge XX (formler).xlsx"
-            wb = openpyxl.load_workbook(template_path)
-            
-            # Arbejd i fanen "Uge xx" – tjek at den findes
-            if "Uge xx" not in wb.sheetnames:
-                st.error("Template-filen mangler fanen 'Uge xx'.")
-                return
-            ws_uge = wb["Uge xx"]
-            
-            # Ryd eksisterende data fra række 4 og ned (bevar rækker 1-3 med header og evt. formler i række 4)
-            max_row = ws_uge.max_row
-            for row in ws_uge.iter_rows(min_row=4, max_row=max_row):
-                for cell in row:
-                    cell.value = None
-            
-            # Indsæt de unikke booking referencer fra unique_refs i kolonne A ("Booking ref.") fra række 4 og ned
-            start_row = 4
-            for i, ref in enumerate(unique_refs, start=start_row):
-                ws_uge.cell(row=i, column=1, value=ref)
-            
-            # Kopier XLOOKUP-formlerne fra række 4, kolonner B til L, og tilpas dem til de nye rækker
-            # Forudsætning: Template-filen indeholder de korrekte formler i række 4 i fanen "Uge xx"
-            formulas = {}
-            for col in range(2, 13):  # Kolonner B (2) til L (12)
-                cell = ws_uge.cell(row=start_row, column=col)
-                if cell.data_type == 'f':  # hvis cellen indeholder en formel
-                    formulas[col] = cell.value
-            
-            num_rows = len(unique_refs)
-            # For hver række under række 4 indsætter vi en tilsvarende formel til de øvrige kolonner
-            for row in range(start_row, start_row + num_rows):
-                for col in range(2, 13):
-                    # Hvis cellen er tom, indsæt formlen (juster evt. rækkehenvisningen)
-                    if ws_uge.cell(row=row, column=col).value is None:
-                        if col in formulas:
-                            original_formula = formulas[col]
-                            # Eksempel: erstat "$A4" med "$A{row}" – dette er en simpel udskiftning og forudsætter, at formlen benytter denne notation.
-                            new_formula = original_formula.replace("$A4", f"$A{row}")
-                            ws_uge.cell(row=row, column=col, value=new_formula)
-            
-            # Fjern alle andre faner, så kun fanen "Uge xx" er tilbage i den endelige fil
-            for sheet in wb.sheetnames:
-                if sheet != "Uge xx":
-                    del wb[sheet]
-            
-            # Gem den redigerede workbook til en buffer og gør den klar til download
+            # Download-knap for den endelige rapport – her udarbejdes en separat rapportfaneblad
             towrite = io.BytesIO()
-            wb.save(towrite)
+            with pd.ExcelWriter(towrite, engine="xlsxwriter") as writer:
+                final_report.to_excel(writer, index=False, sheet_name="SolarWeeklyReport")
             towrite.seek(0)
-            
-            st.success("Rapporten er genereret med den ønskede formatering.")
             st.download_button(
-                label=f"Download rapport for {week_str}",
+                label="Download filtreret Solar Weekly Report",
                 data=towrite,
-                file_name=f"solar_weekly_report_{week_str}.xlsx",
+                file_name="solar_weekly_report_filtered.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
             
         except Exception as e:
-            st.error(f"Fejl under behandling af filen: {e}")
+            st.error(f"Fejl under indlæsning og analyse af fil: {e}")
