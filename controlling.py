@@ -35,8 +35,7 @@ def controlling_tab():
     # Indsæt linket med teksten for sidste uge, f.eks. "Download Controlling report for sidste uge (2025-35)"
     st.markdown(f"[Download Controlling report for sidste uge (2025-{last_week_date.isocalendar()[1]:02d})]({data_link})")
     
-    st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
-    st.write("- SessionId, Date, CustomerId, CustomerName, EstDuration, ActDuration, DurationDifference, SupportNote")
+    st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord.")
     
     uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"], key="controlling")
     if uploaded_file is not None:
