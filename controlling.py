@@ -31,7 +31,6 @@ def controlling_tab():
     last_week_date = today - timedelta(days=7)
     last_week_str = last_week_date.strftime("%Y") + f"{last_week_date.isocalendar()[1]:02d}"
     data_link = f"https://moverdatawarehouse.azurewebsites.net/download/DurationControlling?apikey=2d633b&Userid=74859&Yearweek={last_week_str}"
-    
     st.markdown(f"[Download Controlling report for sidste uge (2025-{last_week_date.isocalendar()[1]:02d})]({data_link})")
     
     st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
@@ -40,19 +39,20 @@ def controlling_tab():
     uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"], key="controlling")
     if uploaded_file is not None:
         try:
-            df = pd.read_excel(uploaded_file, engine='openpyxl')
+            df = pd.read_excel(uploaded_file, engine="openpyxl")
         except Exception as e:
             st.error("Fejl ved indlæsning af fil: " + str(e))
             return
         
         required_columns = [
-            "SessionId", "Date", "CustomerId", "CustomerName",
+            "SessionId", "Date", "CustomerId", "CustomerName", 
             "EstDuration", "ActDuration", "DurationDifference", "SupportNote"
         ]
         missing = [col for col in required_columns if col not in df.columns]
         if missing:
             st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing))
         else:
+            # Ryd op i data: Drop rækker uden SupportNote eller CustomerName
             initial_rows = len(df)
             df = df.dropna(subset=["SupportNote", "CustomerName"])
             dropped_rows = initial_rows - len(df)
@@ -61,7 +61,7 @@ def controlling_tab():
             df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
             st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
             
-            # Påfør analysen: Tilføj nye kolonner med keywords
+            # Påfør analysen: Tilføj kolonner med keywords
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
             
@@ -69,8 +69,8 @@ def controlling_tab():
             df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
             
             output_cols = [
-                "SessionId", "Date", "CustomerId", "CustomerName",
-                "EstDuration", "ActDuration", "DurationDifference",
+                "SessionId", "Date", "CustomerId", "CustomerName", 
+                "EstDuration", "ActDuration", "DurationDifference", 
                 "SupportNote", "Keywords", "MatchingKeyword"
             ]
             
@@ -78,18 +78,19 @@ def controlling_tab():
             st.markdown("#### Overordnede analyserede resultater:")
             st.dataframe(df[output_cols])
             
-            # Opret en separat tabel for hver unik kunde
-            unique_customers = sorted(df["CustomerName"].unique())
+            # Kollapsibel sektion for "Resultater per kunde:" hvor kun de rækker med Keywords=="Ja" vises
             st.markdown("#### Resultater per kunde:")
+            unique_customers = sorted(df["CustomerName"].unique())
             for customer in unique_customers:
-                st.subheader(f"Kunde: {customer}")
-                df_customer = df[df["CustomerName"] == customer]
-                st.dataframe(df_customer[output_cols])
+                with st.expander(f"Kunde: {customer}"):
+                    st.markdown(f'<h4 style="font-size:14px;">Kunde: {customer}</h4>', unsafe_allow_html=True)
+                    df_customer = df[(df["CustomerName"] == customer) & (df["Keywords"] == "Ja")]
+                    st.dataframe(df_customer[output_cols])
             
             # Gem samlet analyseret fil til download
             towrite = io.BytesIO()
-            with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
-                df.to_excel(writer, index=False, sheet_name='Analyseret')
+            with pd.ExcelWriter(towrite, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=False, sheet_name="Analyseret")
             towrite.seek(0)
             st.download_button(
                 label="Download analyseret Excel-fil", 
