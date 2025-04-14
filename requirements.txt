@@ -5,3 +5,4 @@ XlsxWriter
 requests
 Pillow
 matplotlib
+streamlit>=1.0.0
