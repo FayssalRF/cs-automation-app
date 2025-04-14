@@ -13,7 +13,7 @@ if not st.session_state.authenticated:
     st.title("Login")
     password = st.text_input("Enter password", type="password")
     if st.button("Login"):
-        if password == "CSmover123":  # Change this to your desired password.
+        if password == "CSmover123":  # Change this to your desired password
             st.session_state.authenticated = True
             st.success("Password correct!")
         else:
@@ -28,10 +28,6 @@ st.set_page_config(
 )
 
 # Global CSS-styling i overensstemmelse med Mover Brand Guidelines
-# • Typography: Open Sans in regular weight
-# • Primary colors: Midnight Blue (#01293D) and Daylight Blue (#003F63)
-# • Backgrounds for text remain white.
-# • Buttons: rounded, with solid fill for primary and outlined for secondary actions.
 st.markdown(
     """
     <!-- Import Open Sans and Material Icons from Google Fonts -->
@@ -44,7 +40,7 @@ st.markdown(
         font-weight: 400;
         font-size: 16pt;
         color: #01293D; /* Primary text color (Midnight Blue) */
-        background-color: #FFFFFF; /* Text backgrounds remain white */
+        background-color: #FFFFFF; /* White background for text */
     }
     h1, h2, h3, h4 {
         font-family: 'Open Sans', sans-serif;
@@ -53,11 +49,11 @@ st.markdown(
     }
     h1 {
         font-size: 2.5em;
-        color: #01293D; /* Midnight Blue */
+        color: #01293D;
     }
     h2 {
         font-size: 2em;
-        color: #003F63; /* Daylight Blue */
+        color: #003F63;
     }
     h3 {
         font-size: 1.75em;
@@ -73,7 +69,7 @@ st.markdown(
         border-radius: 25px;
         font-size: 14pt;
         font-weight: 700;
-        background-color: #01293D; /* Midnight Blue for primary actions */
+        background-color: #01293D;
         color: #FFFFFF;
         border: none;
         padding: 10px 24px;
@@ -85,7 +81,7 @@ st.markdown(
         color: #01293D;
         border: 2px solid #01293D;
     }
-    /* Tab styling */
+    /* Tabs styling */
     [data-baseweb="tab"] {
         margin-right: 30px;
     }
@@ -109,26 +105,24 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Header section: direct, professional, and accessible tone.
+# Header: Logo erstatter titlen og tagline opdateres.
+try:
+    # Vis logoet øverst
+    logo = Image.open("moverLogotype_blue.png")
+    st.image(logo, width=200)
+except Exception as e:
+    st.error("Error loading logo: " + str(e))
+
 st.markdown(
     """
     <div class="header">
-        <h1>Mover - Empowering your logistics</h1>
-        <p>We save you time, reduce costs, and promote sustainability with advanced technology solutions.</p>
+        <h1 style="font-size:2.5em; color:#01293D;">We are changing logistics for good</h1>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-# Indlæs logo (ensure that the image file is placed in the project root directory)
-try:
-    logo = Image.open("moverLogotype_blue.png")
-    st.image(logo, width=200)
-    st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
-except Exception as e:
-    st.error("Error loading logo: " + str(e))
-
-# Importer de enkelte moduler for fanerne.
+# Importer de enkelte menupunktsmoduler
 from forside import forside_tab
 from controlling import controlling_tab
 from solar_weekly import solar_weekly_tab
@@ -155,7 +149,7 @@ with tabs[3]:
 with tabs[4]:
     revenue_tab()
 
-# Footer section
+# Footer-sektion
 st.markdown(
     """
     <div class="footer">
