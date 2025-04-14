@@ -109,8 +109,8 @@ st.markdown(
 st.markdown(
     """
     <div class="header">
-        <!-- Logo hentes fra eksternt URL -->
-        <img src="https://www.moverlog.com/da" alt="Mover Logo" style="max-width: 200px;">
+        <!-- Logo hentes fra en ekstern URL -->
+        <img src="https://cdn.prod.website-files.com/638ddc2598d5bbd72c3131e7/63988096e742b85fc5193af7_logo.svg" alt="Mover Logo" style="max-width: 200px;">
         <h2>We are changing logistics for good</h2>
     </div>
     """,
