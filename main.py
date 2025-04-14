@@ -110,7 +110,7 @@ st.markdown(
     """
     <div class="header">
         <!-- Logo hentes fra en ekstern URL -->
-        <img src="https://downloads.intercomcdn.com/i/o/538252/9b0ce0a85b5cb8cb26489c68/930b0edcfcd20b7d95eafe5718830f6d.png" alt="Mover Logo" style="max-width: 200px;">
+        <img src="https://raw.githubusercontent.com/FayssalRF/cs-automation-app/refs/heads/main/moverLogotype_blue.png" alt="Mover Logo" style="max-width: 200px;">
         <h2>We are changing logistics for good</h2>
     </div>
     """,
