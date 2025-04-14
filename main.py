@@ -13,21 +13,21 @@ if not st.session_state.authenticated:
     st.title("Login")
     password = st.text_input("Enter password", type="password")
     if st.button("Login"):
-        if password == "CSmover123":  # Change this to your desired password
+        if password == "CSmover123":  # Change this to your desired password.
             st.session_state.authenticated = True
             st.success("Password correct!")
         else:
             st.error("Incorrect password!")
     st.stop()
 
-# Konfigurer siden med en professionel titel, ikon og bredt layout
+# Konfigurer siden med professionelt titel, ikon og bredt layout
 st.set_page_config(
     page_title="Mover - Empowering Logistics with Technology",
     page_icon=":rocket:",
     layout="wide"
 )
 
-# Global CSS-styling i overensstemmelse med Mover Brand Guidelines
+# Global CSS-styling baseret på Mover Brand Guidelines
 st.markdown(
     """
     <!-- Import Open Sans and Material Icons from Google Fonts -->
@@ -49,11 +49,11 @@ st.markdown(
     }
     h1 {
         font-size: 2.5em;
-        color: #01293D;
+        color: #01293D; /* Midnight Blue */
     }
     h2 {
         font-size: 2em;
-        color: #003F63;
+        color: #003F63; /* Daylight Blue */
     }
     h3 {
         font-size: 1.75em;
@@ -64,24 +64,24 @@ st.markdown(
         text-align: center;
         padding: 20px;
     }
-    /* Primary buttons: rounded, solid fill (Midnight Blue or teal) */
+    /* Primary buttons: rounded with solid fill */
     .stButton>button {
         border-radius: 25px;
         font-size: 14pt;
         font-weight: 700;
-        background-color: #01293D;
+        background-color: #01293D; /* Midnight Blue */
         color: #FFFFFF;
         border: none;
         padding: 10px 24px;
         cursor: pointer;
     }
-    /* Secondary buttons: outlined style (white or Midnight Blue outline) */
+    /* Secondary buttons: outlined style */
     .stButton>button.secondary {
         background-color: transparent;
         color: #01293D;
         border: 2px solid #01293D;
     }
-    /* Tabs styling */
+    /* Tab styling */
     [data-baseweb="tab"] {
         margin-right: 30px;
     }
@@ -105,24 +105,22 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Header: Logo erstatter titlen og tagline opdateres.
+# Header: Vis logo centreret med tagline under
 try:
-    # Vis logoet øverst
     logo = Image.open("moverLogotype_blue.png")
-    st.image(logo, width=200)
+    # Brug kolonner til at centrere logoet og tagline
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.image(logo, width=200)
+        st.markdown(
+            "<h1 style='font-size:2.5em; color:#01293D;'>We are changing logistics for good</h1>",
+            unsafe_allow_html=True,
+        )
+    st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 except Exception as e:
     st.error("Error loading logo: " + str(e))
 
-st.markdown(
-    """
-    <div class="header">
-        <h1 style="font-size:2.5em; color:#01293D;">We are changing logistics for good</h1>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-# Importer de enkelte menupunktsmoduler
+# Importer de enkelte moduler for fanerne
 from forside import forside_tab
 from controlling import controlling_tab
 from solar_weekly import solar_weekly_tab
