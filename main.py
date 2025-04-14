@@ -13,34 +13,34 @@ if not st.session_state.authenticated:
     st.title("Login")
     password = st.text_input("Enter password", type="password")
     if st.button("Login"):
-        if password == "CSmover123":  # Change this to your desired password.
+        if password == "CSmover123":  # Change to your desired password.
             st.session_state.authenticated = True
             st.success("Password correct!")
         else:
             st.error("Incorrect password!")
     st.stop()
 
-# Konfigurer siden med professionelt titel, ikon og bredt layout
+# Konfigurer siden med en professionel titel, ikon og bredt layout.
 st.set_page_config(
     page_title="Mover - Empowering Logistics with Technology",
     page_icon=":rocket:",
     layout="wide"
 )
 
-# Global CSS-styling baseret på Mover Brand Guidelines
+# Global CSS-styling i overensstemmelse med Mover Brand Guidelines
 st.markdown(
     """
     <!-- Import Open Sans and Material Icons from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons:outlined" rel="stylesheet">
     <style>
-    /* Basic typography and color settings */
+    /* Grundlæggende styling */
     body, .main, p, li, .stMarkdown {
         font-family: 'Open Sans', sans-serif;
-        font-weight: 400;
         font-size: 16pt;
-        color: #01293D; /* Primary text color (Midnight Blue) */
-        background-color: #FFFFFF; /* White background for text */
+        font-weight: 400;
+        color: #01293D; /* Midnight Blue */
+        background-color: #FFFFFF; /* Tekstbaggrunde forbliver hvide */
     }
     h1, h2, h3, h4 {
         font-family: 'Open Sans', sans-serif;
@@ -49,7 +49,7 @@ st.markdown(
     }
     h1 {
         font-size: 2.5em;
-        color: #01293D; /* Midnight Blue */
+        color: #01293D;
     }
     h2 {
         font-size: 2em;
@@ -59,13 +59,13 @@ st.markdown(
         font-size: 1.75em;
         color: #01293D;
     }
-    /* Header styling */
+    /* Centering header content */
     .header {
         text-align: center;
         padding: 20px;
     }
-    /* Primary buttons: rounded with solid fill */
-    .stButton>button {
+    /* Primary buttons: rounded, solid fill */
+    .stButton > button {
         border-radius: 25px;
         font-size: 14pt;
         font-weight: 700;
@@ -76,7 +76,7 @@ st.markdown(
         cursor: pointer;
     }
     /* Secondary buttons: outlined style */
-    .stButton>button.secondary {
+    .stButton > button.secondary {
         background-color: transparent;
         color: #01293D;
         border: 2px solid #01293D;
@@ -105,22 +105,19 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Header: Vis logo centreret med tagline under
-try:
-    logo = Image.open("moverLogotype_blue.png")
-    # Brug kolonner til at centrere logoet og tagline
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.image(logo, width=200)
-        st.markdown(
-            "<h1 style='font-size:2.5em; color:#01293D;'>We are changing logistics for good</h1>",
-            unsafe_allow_html=True,
-        )
-    st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
-except Exception as e:
-    st.error("Error loading logo: " + str(e))
+# Header sektion med logo og ny sætning, alt centreret.
+st.markdown(
+    """
+    <div class="header">
+        <!-- Logo replaces the textual title -->
+        <img src="moverLogotype_blue.png" alt="Mover Logo" style="max-width: 200px;">
+        <h2>We are changing logistics for good</h2>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-# Importer de enkelte moduler for fanerne
+# Importer de enkelte moduler for fanerne.
 from forside import forside_tab
 from controlling import controlling_tab
 from solar_weekly import solar_weekly_tab
@@ -147,7 +144,7 @@ with tabs[3]:
 with tabs[4]:
     revenue_tab()
 
-# Footer-sektion
+# Footer sektion
 st.markdown(
     """
     <div class="footer">
