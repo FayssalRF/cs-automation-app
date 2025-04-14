@@ -6,4 +6,4 @@ requests
 Pillow
 matplotlib
 streamlit>=1.0.0
-streamlit-aggrid
+streamlit-aggrid>=0.3.2
