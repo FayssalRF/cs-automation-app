@@ -13,7 +13,7 @@ if not st.session_state.authenticated:
     st.title("Login")
     password = st.text_input("Enter password", type="password")
     if st.button("Login"):
-        if password == "CSmover123":  # Change to your desired password.
+        if password == "CSmover123":  # Change this to your desired password.
             st.session_state.authenticated = True
             st.success("Password correct!")
         else:
@@ -34,13 +34,13 @@ st.markdown(
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons:outlined" rel="stylesheet">
     <style>
-    /* Grundlæggende styling */
+    /* Basic typography and color settings */
     body, .main, p, li, .stMarkdown {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt;
         font-weight: 400;
-        color: #01293D; /* Midnight Blue */
-        background-color: #FFFFFF; /* Tekstbaggrunde forbliver hvide */
+        color: #01293D; /* Primary text color (Midnight Blue) */
+        background-color: #FFFFFF; /* Text backgrounds remain white */
     }
     h1, h2, h3, h4 {
         font-family: 'Open Sans', sans-serif;
@@ -69,7 +69,7 @@ st.markdown(
         border-radius: 25px;
         font-size: 14pt;
         font-weight: 700;
-        background-color: #01293D; /* Midnight Blue */
+        background-color: #01293D; /* Midnight Blue for primary actions */
         color: #FFFFFF;
         border: none;
         padding: 10px 24px;
@@ -105,12 +105,12 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Header sektion med logo og ny sætning, alt centreret.
+# Header-sektion med logo hentet fra URL og ny sætning - alt centreret.
 st.markdown(
     """
     <div class="header">
-        <!-- Logo replaces the textual title -->
-        <img src="moverLogotype_blue.png" alt="Mover Logo" style="max-width: 200px;">
+        <!-- Logo hentes fra eksternt URL -->
+        <img src="https://www.moverlog.com/da" alt="Mover Logo" style="max-width: 200px;">
         <h2>We are changing logistics for good</h2>
     </div>
     """,
@@ -124,7 +124,7 @@ from solar_weekly import solar_weekly_tab
 from solar_co2 import solar_co2_tab
 from revenue import revenue_tab
 
-# Opret fanebjælken med de forskellige sektioner
+# Opret fanebjælken med de forskellige sektioner.
 tabs = st.tabs([
     "Forside",
     "Controlling Report Analyzer",
@@ -144,7 +144,7 @@ with tabs[3]:
 with tabs[4]:
     revenue_tab()
 
-# Footer sektion
+# Footer-sektion.
 st.markdown(
     """
     <div class="footer">
