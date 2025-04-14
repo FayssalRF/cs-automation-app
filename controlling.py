@@ -22,6 +22,11 @@ def analyse_supportnote(note):
     else:
         return "Nej", ""
 
+def create_session_link(sid):
+    """Laver et hyperlink for en given SessionId.
+       Når man klikker, åbnes linket i en ny fane."""
+    return f'<a href="https://admin.mover.dk/dk/da/user-area/trips/session/{sid}/" target="_blank">{sid}</a>'
+
 def controlling_tab():
     st.title("Controlling Report Analyse")
     st.markdown("### Velkommen til appen til analyse af controlling rapporter")
@@ -32,7 +37,6 @@ def controlling_tab():
     last_week_str = last_week_date.strftime("%Y") + f"{last_week_date.isocalendar()[1]:02d}"
     data_link = f"https://moverdatawarehouse.azurewebsites.net/download/DurationControlling?apikey=2d633b&Userid=74859&Yearweek={last_week_str}"
     
-    # Indsæt linket med den ønskede tekst, fx "Download Controlling report for sidste uge (2025-35)"
     st.markdown(f"[Download Controlling report for sidste uge (2025-{last_week_date.isocalendar()[1]:02d})]({data_link})")
     
     st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
@@ -51,6 +55,7 @@ def controlling_tab():
         if missing:
             st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing))
         else:
+            # Dataoprydning
             initial_rows = len(df)
             df = df.dropna(subset=["SupportNote", "CustomerName"])
             dropped_rows = initial_rows - len(df)
@@ -59,34 +64,38 @@ def controlling_tab():
             df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
             st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
             
-            # Påfør analysen og tilføj kolonner for keywords
+            # Anvend analysen og tilføj kolonner for keywords
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
             
-            # Formatter "Date"-kolonnen til kort datoformat "DD-MM-ÅÅÅÅ"
+            # Formatter "Date"-kolonnen til formatet "DD-MM-ÅÅÅÅ"
             df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
+            
+            # Opdater SessionId-kolonnen, så den bliver til et hyperlink
+            df["SessionId"] = df["SessionId"].apply(create_session_link)
             
             output_cols = ["SessionId", "Date", "CustomerId", "CustomerName", "EstDuration", "ActDuration", "DurationDifference", "SupportNote", "Keywords", "MatchingKeyword"]
             
-            # Overordnet visning: Alle resultater
+            # Vis den overordnede analyse som en HTML-tabel
             st.markdown("#### Overordnede analyserede resultater:")
-            st.dataframe(df[output_cols])
+            st.markdown(df[output_cols].to_html(escape=False), unsafe_allow_html=True)
             
-            # Opret kollapsible sektioner for hver unik kunde med kun resultater hvor Keywords = "Ja"
+            # Vis resultater per kunde (kun med ekstra tid) i kollapsible sektioner
             unique_customers = sorted(df["CustomerName"].unique())
             st.markdown("#### Resultater per kunde (kun med ekstra tid):")
             for customer in unique_customers:
-                # Omslut kundedata i en expander (kollapsible sektion)
                 with st.expander(f"Kunde: {customer}"):
                     # Overskrift med fast fontstørrelse 14px
                     st.markdown(f'<h4 style="font-size:14px;">Kunde: {customer}</h4>', unsafe_allow_html=True)
                     df_customer = df[(df["CustomerName"] == customer) & (df["Keywords"] == "Ja")]
-                    st.dataframe(df_customer[output_cols])
+                    st.markdown(df_customer[output_cols].to_html(escape=False), unsafe_allow_html=True)
             
-            # Gem samlet analyseret fil til download
+            # Til download af Excel-fil – her fjernes HTML-tagget i SessionId
+            df_download = df.copy()
+            df_download["SessionId"] = df_download["SessionId"].str.extract(r'>(.*?)<')
             towrite = io.BytesIO()
             with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
-                df.to_excel(writer, index=False, sheet_name='Analyseret')
+                df_download.to_excel(writer, index=False, sheet_name='Analyseret')
             towrite.seek(0)
             st.download_button(
                 label="Download analyseret Excel-fil", 
