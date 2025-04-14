@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 from datetime import date, timedelta
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
+from st_aggrid import AgGrid, GridOptionsBuilder  # JsCode er ikke længere nødvendigt
 
 # Indlæs keywords fra keywords.txt (kan evt. placeres i en fælles utils.py)
 try:
@@ -22,17 +22,6 @@ def analyse_supportnote(note):
         return "Ja", ", ".join(matched)
     else:
         return "Nej", ""
-
-# JavaScript-kode til at lave et hyperlink i SessionId-cellen
-session_link = JsCode("""
-function(params) {
-    if (params.value) {
-        return `<a href="https://admin.mover.dk/dk/da/user-area/trips/session/${params.value}/" target="_blank">${params.value}</a>`;
-    } else {
-        return '';
-    }
-}
-""")
 
 def controlling_tab():
     st.title("Controlling Report Analyse")
@@ -61,7 +50,7 @@ def controlling_tab():
         if missing:
             st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing))
         else:
-            # Ryd op i data: drop rækker uden support note eller kundens navn
+            # Dataoprydning
             initial_rows = len(df)
             df = df.dropna(subset=["SupportNote", "CustomerName"])
             dropped_rows = initial_rows - len(df)
@@ -80,9 +69,12 @@ def controlling_tab():
             output_cols = ["SessionId", "Date", "CustomerId", "CustomerName", "EstDuration", "ActDuration", "DurationDifference", "SupportNote", "Keywords", "MatchingKeyword"]
             
             st.markdown("#### Overordnede analyserede resultater:")
-            # Byg grid options for den interaktive tabel
+            
+            # Byg grid options for den interaktive tabel – brug en JS-streng til cell renderer
             gb = GridOptionsBuilder.from_dataframe(df[output_cols])
-            gb.configure_column("SessionId", cellRenderer=session_link)
+            gb.configure_column("SessionId", 
+                cellRenderer="function(params) { if (params.value) { return `<a href='https://admin.mover.dk/dk/da/user-area/trips/session/${params.value}/' target='_blank'>${params.value}</a>`; } else { return ''; } }"
+            )
             gb.configure_default_column(editable=False, groupable=True, sortable=True, filter=True)
             gridOptions = gb.build()
             
@@ -95,9 +87,10 @@ def controlling_tab():
                 with st.expander(f"Kunde: {customer}"):
                     st.markdown(f'<h4 style="font-size:14px;">Kunde: {customer}</h4>', unsafe_allow_html=True)
                     df_customer = df[(df["CustomerName"] == customer) & (df["Keywords"] == "Ja")]
-                    # Byg grid options for kundedata
                     gb_customer = GridOptionsBuilder.from_dataframe(df_customer[output_cols])
-                    gb_customer.configure_column("SessionId", cellRenderer=session_link)
+                    gb_customer.configure_column("SessionId", 
+                        cellRenderer="function(params) { if (params.value) { return `<a href='https://admin.mover.dk/dk/da/user-area/trips/session/${params.value}/' target='_blank'>${params.value}</a>`; } else { return ''; } }"
+                    )
                     gb_customer.configure_default_column(editable=False, groupable=True, sortable=True, filter=True)
                     gridOptions_customer = gb_customer.build()
                     AgGrid(df_customer[output_cols], gridOptions=gridOptions_customer, enableEnterpriseModules=False, height=300, fit_columns_on_grid_load=True)
