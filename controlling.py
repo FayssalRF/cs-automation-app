@@ -45,6 +45,7 @@ def controlling_tab():
         except Exception as e:
             st.error("Fejl ved indlæsning af fil: " + str(e))
             return
+        
         required_columns = ["SessionId", "Date", "CustomerId", "CustomerName", "EstDuration", "ActDuration", "DurationDifference", "SupportNote"]
         missing = [col for col in required_columns if col not in df.columns]
         if missing:
@@ -57,21 +58,31 @@ def controlling_tab():
                 st.info(f"{dropped_rows} rækker blev droppet, da de manglede værdier i SupportNote eller CustomerName.")
             df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
             st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
+            
+            # Påfør analysen og tilføj kolonner for keywords
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
             output_cols = ["SessionId", "Date", "CustomerId", "CustomerName", "EstDuration", "ActDuration", "DurationDifference", "SupportNote", "Keywords", "MatchingKeyword"]
-            st.markdown("#### Analyserede Resultater - Med ekstra tid (Ja):")
-            df_yes = df[df["Keywords"] == "Ja"]
-            st.dataframe(df_yes[output_cols])
-            st.markdown("#### Analyserede Resultater - Uden ekstra tid (Nej):")
-            df_no = df[df["Keywords"] == "Nej"]
-            st.dataframe(df_no[output_cols])
+            
+            st.markdown("#### Overordnede analyserede resultater:")
+            st.dataframe(df[output_cols])
+            
+            # Opret en separat tabel for hver unik kunde
             unique_customers = sorted(df["CustomerName"].unique())
-            customer_list = "\n".join(["- " + str(customer) for customer in unique_customers])
-            st.markdown("#### Unikke Kunder:")
-            st.markdown(customer_list)
+            st.markdown("#### Resultater per kunde:")
+            for customer in unique_customers:
+                st.subheader(f"Kunde: {customer}")
+                df_customer = df[df["CustomerName"] == customer]
+                st.dataframe(df_customer[output_cols])
+            
+            # Gemmer samlet analyseret fil til download
             towrite = io.BytesIO()
             with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Analyseret')
             towrite.seek(0)
-            st.download_button(label="Download analyseret Excel-fil", data=towrite, file_name="analyseret_controlling_report.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.download_button(
+                label="Download analyseret Excel-fil", 
+                data=towrite, 
+                file_name="analyseret_controlling_report.xlsx", 
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
