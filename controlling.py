@@ -50,7 +50,7 @@ def controlling_tab():
         if missing:
             st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing))
         else:
-            # Dataoprydning
+            # Dataoprydning: Drop rækker uden SupportNote eller CustomerName
             initial_rows = len(df)
             df = df.dropna(subset=["SupportNote", "CustomerName"])
             dropped_rows = initial_rows - len(df)
@@ -63,16 +63,17 @@ def controlling_tab():
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
             
-            # Formatter "Date"-kolonnen: kort datoformat "DD-MM-ÅÅÅÅ"
+            # Formatter "Date"-kolonnen til kort datoformat "DD-MM-ÅÅÅÅ"
             df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
             
             output_cols = ["SessionId", "Date", "CustomerId", "CustomerName", "EstDuration", "ActDuration", "DurationDifference", "SupportNote", "Keywords", "MatchingKeyword"]
             
             st.markdown("#### Overordnede analyserede resultater:")
             
-            # Byg grid options for den interaktive tabel – brug en JS-streng til cell renderer
+            # Byg grid options for den interaktive tabel – brug en JS-streng til cell renderer for SessionId
             gb = GridOptionsBuilder.from_dataframe(df[output_cols])
-            gb.configure_column("SessionId", 
+            gb.configure_column(
+                "SessionId", 
                 cellRenderer="function(params) { if (params.value) { return `<a href='https://admin.mover.dk/dk/da/user-area/trips/session/${params.value}/' target='_blank'>${params.value}</a>`; } else { return ''; } }"
             )
             gb.configure_default_column(editable=False, groupable=True, sortable=True, filter=True)
@@ -88,16 +89,17 @@ def controlling_tab():
                     st.markdown(f'<h4 style="font-size:14px;">Kunde: {customer}</h4>', unsafe_allow_html=True)
                     df_customer = df[(df["CustomerName"] == customer) & (df["Keywords"] == "Ja")]
                     gb_customer = GridOptionsBuilder.from_dataframe(df_customer[output_cols])
-                    gb_customer.configure_column("SessionId", 
+                    gb_customer.configure_column(
+                        "SessionId", 
                         cellRenderer="function(params) { if (params.value) { return `<a href='https://admin.mover.dk/dk/da/user-area/trips/session/${params.value}/' target='_blank'>${params.value}</a>`; } else { return ''; } }"
                     )
                     gb_customer.configure_default_column(editable=False, groupable=True, sortable=True, filter=True)
                     gridOptions_customer = gb_customer.build()
                     AgGrid(df_customer[output_cols], gridOptions=gridOptions_customer, enableEnterpriseModules=False, height=300, fit_columns_on_grid_load=True)
             
-            # Til Excel-download: fjern HTML fra SessionId
+            # Til Excel-download: sørg for, at SessionId er en streng (uden HTML)
             df_download = df.copy()
-            df_download["SessionId"] = df_download["SessionId"].str.extract(r'>(.*?)<')
+            df_download["SessionId"] = df_download["SessionId"].astype(str)
             towrite = io.BytesIO()
             with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
                 df_download.to_excel(writer, index=False, sheet_name='Analyseret')
