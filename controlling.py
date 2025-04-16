@@ -3,24 +3,18 @@ import pandas as pd
 import io
 from datetime import date, timedelta
 
-# Indlæs keywords fra keywords.txt (dette kan også placeres i en fælles utils.py, hvis ønsket)
-try:
-    with open("keywords.txt", "r", encoding="utf-8") as file:
-        all_keywords = [line.strip().lower() for line in file if line.strip()]
-except Exception as e:
-    st.error("Fejl ved indlæsning af keywords: " + str(e))
-    all_keywords = []
-
+# Forudsætter, at funktionen analyse_supportnote() er defineret et sted, fx i samme modul eller i en delt utils-fil.
 def analyse_supportnote(note):
+    # Dummy-funktion – erstat med din egen logik
     if pd.isna(note):
         return "Nej", ""
     note_lower = str(note).lower()
-    matched = [kw for kw in all_keywords if kw in note_lower]
-    if matched:
-        matched = list(set(matched))
-        return "Ja", ", ".join(matched)
-    else:
-        return "Nej", ""
+    # Eksempel: Returner "Ja" hvis note indeholder et nøgleord, ellers "Nej"
+    keywords = ["eksempel", "fejl", "forsinket"]
+    found = [kw for kw in keywords if kw in note_lower]
+    if found:
+        return "Ja", ", ".join(found)
+    return "Nej", ""
 
 def controlling_tab():
     st.title("Controlling Report Analyse")
@@ -58,10 +52,11 @@ def controlling_tab():
             dropped_rows = initial_rows - len(df)
             if dropped_rows > 0:
                 st.info(f"{dropped_rows} rækker blev droppet, da de manglede værdier i SupportNote eller CustomerName.")
+            # Fjern rækker for "IKEA NL", så disse bliver håndteret separat
             df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
             st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
             
-            # Påfør analysen: Tilføj kolonner med keywords
+            # Anvend analyse på SupportNote og tilføj resultater i nye kolonner
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df["MatchingKeyword"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
             
@@ -96,5 +91,56 @@ def controlling_tab():
                 label="Download analyseret Excel-fil", 
                 data=towrite, 
                 file_name="analyseret_controlling_report.xlsx", 
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+    
+    # -------------------------------------------------------------------------
+    # Ny sektion: IKEA NL Deviations
+    st.markdown("### IKEA NL Deviations")
+    st.write("Upload en Excel-fil med følgende kolonner:")
+    st.write("RouteId, DriverId, Date, Slug, ActualStartTime, REVISEDActualStartTime, ActualEndTime, ActualDuration (min), REVISEDActualDuration (min), EstimatedStartTime, EstimatedEndTime, EstimateDuration (min), Deviation (min), Realtime-tag, SupportNote, Assessment, ShortNote")
+    
+    uploaded_dev_file = st.file_uploader("Upload Deviations Excel-fil", type=["xlsx", "xls"], key="deviations")
+    if uploaded_dev_file is not None:
+        try:
+            df_dev = pd.read_excel(uploaded_dev_file, engine="openpyxl")
+        except Exception as e:
+            st.error("Fejl ved indlæsning af deviations fil: " + str(e))
+            return
+        
+        required_columns_dev = [
+            "RouteId", "DriverId", "Date", "Slug", "ActualStartTime", "REVISEDActualStartTime",
+            "ActualEndTime", "ActualDuration (min)", "REVISEDActualDuration (min)", "EstimatedStartTime", 
+            "EstimatedEndTime", "EstimateDuration (min)", "Deviation (min)", "Realtime-tag", 
+            "SupportNote", "Assessment", "ShortNote"
+        ]
+        missing_dev = [col for col in required_columns_dev if col not in df_dev.columns]
+        if missing_dev:
+            st.error("Følgende nødvendige kolonner mangler i deviations filen: " + ", ".join(missing_dev))
+        else:
+            # Anvend analyse på SupportNote (kolonne "SupportNote")
+            df_dev["Keywords"] = df_dev["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
+            df_dev["MatchingKeyword"] = df_dev["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
+            # Formatter "Date"-kolonnen til kort datoformat
+            df_dev["Date"] = pd.to_datetime(df_dev["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
+            
+            output_cols_dev = [
+                "RouteId", "DriverId", "Date", "Slug", "ActualStartTime", "REVISEDActualStartTime",
+                "ActualEndTime", "ActualDuration (min)", "REVISEDActualDuration (min)", "EstimatedStartTime", 
+                "EstimatedEndTime", "EstimateDuration (min)", "Deviation (min)", "Realtime-tag", 
+                "SupportNote", "Assessment", "ShortNote", "Keywords", "MatchingKeyword"
+            ]
+            
+            st.markdown("#### Analyserede IKEA NL Deviations:")
+            st.dataframe(df_dev[output_cols_dev])
+            
+            towrite_dev = io.BytesIO()
+            with pd.ExcelWriter(towrite_dev, engine="xlsxwriter") as writer:
+                df_dev.to_excel(writer, index=False, sheet_name="IKEA_NL_Deviations")
+            towrite_dev.seek(0)
+            st.download_button(
+                label="Download analyseret Deviations rapport", 
+                data=towrite_dev, 
+                file_name="analyseret_IKEA_NL_Deviations.xlsx", 
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
