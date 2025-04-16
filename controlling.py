@@ -3,18 +3,28 @@ import pandas as pd
 import io
 from datetime import date, timedelta
 
-# Forudsætter, at funktionen analyse_supportnote() er defineret et sted, fx i samme modul eller i en delt utils-fil.
+# Indlæs keywords fra keywords.txt
+try:
+    with open("keywords.txt", "r", encoding="utf-8") as file:
+        all_keywords = [line.strip().lower() for line in file if line.strip()]
+except Exception as e:
+    st.error("Fejl ved indlæsning af keywords: " + str(e))
+    all_keywords = []
+
 def analyse_supportnote(note):
-    # Dummy-funktion – erstat med din egen logik
+    """
+    Tjekker om note (supportnotet) indeholder et eller flere af nøgleordene fra all_keywords.
+    Returnerer ("Ja", "keyword1, keyword2") hvis der findes match, ellers ("Nej", "").
+    """
     if pd.isna(note):
         return "Nej", ""
     note_lower = str(note).lower()
-    # Eksempel: Returner "Ja" hvis note indeholder et nøgleord, ellers "Nej"
-    keywords = ["eksempel", "fejl", "forsinket"]
-    found = [kw for kw in keywords if kw in note_lower]
-    if found:
-        return "Ja", ", ".join(found)
-    return "Nej", ""
+    matched = [kw for kw in all_keywords if kw in note_lower]
+    if matched:
+        matched = list(set(matched))  # fjern dubletter
+        return "Ja", ", ".join(matched)
+    else:
+        return "Nej", ""
 
 def controlling_tab():
     st.title("Controlling Report Analyse")
@@ -23,14 +33,14 @@ def controlling_tab():
     # Udregn forrige uges Yearweek (år + to-cifret uge)
     today = date.today()
     last_week_date = today - timedelta(days=7)
-    last_week_str = last_week_date.strftime("%Y") + f"{last_week_date.isocalendar()[1]:02d}"
+    last_week_str = today.strftime("%Y") + f"{last_week_date.isocalendar()[1]:02d}"
     data_link = f"https://moverdatawarehouse.azurewebsites.net/download/DurationControlling?apikey=2d633b&Userid=74859&Yearweek={last_week_str}"
     st.markdown(f"[Download Controlling report for sidste uge (2025-{last_week_date.isocalendar()[1]:02d})]({data_link})")
     
     st.write("Upload en Excel-fil med controlling data, og få automatisk analyserede resultater baseret på nøgleord. Filen skal indeholde følgende kolonner:")
     st.write("- SessionId, Date, CustomerId, CustomerName, EstDuration, ActDuration, DurationDifference, SupportNote")
     
-    uploaded_file = st.file_uploader("Vælg Excel-fil", type=["xlsx", "xls"], key="controlling")
+    uploaded_file = st.file_uploader("Vælg controlling Excel-fil", type=["xlsx", "xls"], key="controlling")
     if uploaded_file is not None:
         try:
             df = pd.read_excel(uploaded_file, engine="openpyxl")
@@ -46,15 +56,15 @@ def controlling_tab():
         if missing:
             st.error("Følgende nødvendige kolonner mangler: " + ", ".join(missing))
         else:
-            # Ryd op i data: Drop rækker uden SupportNote eller CustomerName
+            # Drop rækker, der mangler SupportNote eller CustomerName
             initial_rows = len(df)
             df = df.dropna(subset=["SupportNote", "CustomerName"])
             dropped_rows = initial_rows - len(df)
             if dropped_rows > 0:
                 st.info(f"{dropped_rows} rækker blev droppet, da de manglede værdier i SupportNote eller CustomerName.")
-            # Fjern rækker for "IKEA NL", så disse bliver håndteret separat
+            # Fjern rækker for "IKEA NL", så disse senere kan håndteres separat
             df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
-            st.success("Filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
+            st.success("Controlling filen er uploadet korrekt, og alle nødvendige kolonner er til stede!")
             
             # Anvend analyse på SupportNote og tilføj resultater i nye kolonner
             df["Keywords"] = df["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
@@ -69,11 +79,9 @@ def controlling_tab():
                 "SupportNote", "Keywords", "MatchingKeyword"
             ]
             
-            # Vis samlet overordnet tabel med alle resultater
-            st.markdown("#### Overordnede analyserede resultater:")
+            st.markdown("#### Overordnede analyserede controlling resultater:")
             st.dataframe(df[output_cols])
             
-            # Kollapsibel sektion for "Resultater per kunde:" hvor kun de rækker med Keywords=="Ja" vises
             st.markdown("#### Resultater per kunde:")
             unique_customers = sorted(df["CustomerName"].unique())
             for customer in unique_customers:
@@ -82,13 +90,12 @@ def controlling_tab():
                     df_customer = df[(df["CustomerName"] == customer) & (df["Keywords"] == "Ja")]
                     st.dataframe(df_customer[output_cols])
             
-            # Gem samlet analyseret fil til download
             towrite = io.BytesIO()
             with pd.ExcelWriter(towrite, engine="xlsxwriter") as writer:
                 df.to_excel(writer, index=False, sheet_name="Analyseret")
             towrite.seek(0)
             st.download_button(
-                label="Download analyseret Excel-fil", 
+                label="Download analyseret controlling rapport", 
                 data=towrite, 
                 file_name="analyseret_controlling_report.xlsx", 
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -100,7 +107,7 @@ def controlling_tab():
     st.write("Upload en Excel-fil med følgende kolonner:")
     st.write("RouteId, DriverId, Date, Slug, ActualStartTime, REVISEDActualStartTime, ActualEndTime, ActualDuration (min), REVISEDActualDuration (min), EstimatedStartTime, EstimatedEndTime, EstimateDuration (min), Deviation (min), Realtime-tag, SupportNote, Assessment, ShortNote")
     
-    uploaded_dev_file = st.file_uploader("Upload Deviations Excel-fil", type=["xlsx", "xls"], key="deviations")
+    uploaded_dev_file = st.file_uploader("Upload IKEA NL Deviations Excel-fil", type=["xlsx", "xls"], key="deviations")
     if uploaded_dev_file is not None:
         try:
             df_dev = pd.read_excel(uploaded_dev_file, engine="openpyxl")
@@ -118,7 +125,13 @@ def controlling_tab():
         if missing_dev:
             st.error("Følgende nødvendige kolonner mangler i deviations filen: " + ", ".join(missing_dev))
         else:
-            # Anvend analyse på SupportNote (kolonne "SupportNote")
+            # Fjern rækker, hvor SupportNote (kolonne O) er tom – dvs. behold kun rækker med supportnoter
+            df_dev = df_dev.dropna(subset=["SupportNote"])
+            if df_dev.empty:
+                st.error("Ingen rækker med supportnoter fundet i deviations filen.")
+                return
+            
+            # Anvend analyse på SupportNote – tjek om der findes keywords fra keywords.txt
             df_dev["Keywords"] = df_dev["SupportNote"].apply(lambda note: analyse_supportnote(note)[0])
             df_dev["MatchingKeyword"] = df_dev["SupportNote"].apply(lambda note: analyse_supportnote(note)[1])
             # Formatter "Date"-kolonnen til kort datoformat
