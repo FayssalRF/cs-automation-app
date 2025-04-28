@@ -1,10 +1,8 @@
-# ikea_nl_deviations.py
-
 import streamlit as st
 import pandas as pd
 import io
 
-# Indlæs keywords fra keywords.txt
+# Indlæs keywords
 try:
     with open("keywords.txt", "r", encoding="utf-8") as f:
         all_keywords = [line.strip().lower() for line in f if line.strip()]
@@ -13,10 +11,6 @@ except Exception as e:
     all_keywords = []
 
 def analyse_supportnote(note):
-    """
-    Tjekker om note indeholder et eller flere nøgleord fra all_keywords.
-    Returnerer ("Ja", "kw1, kw2") hvis der findes match, ellers ("Nej", "").
-    """
     if pd.isna(note):
         return "Nej", ""
     text = str(note).lower()
@@ -27,13 +21,13 @@ def analyse_supportnote(note):
     return "Nej", ""
 
 def ikea_nl_deviations_tab():
-    st.title("IKEA NL Deviations")
-    st.markdown(
-        "Upload en Excel-fil med kolonnerne:\n\n"
-        "RouteId, DriverId, Date, Slug, ActualStartTime, REVISEDActualStartTime, "
-        "ActualEndTime, ActualDuration (min), REVISEDActualDuration (min), "
-        "EstimatedStartTime, EstimatedEndTime, EstimateDuration (min), Deviation (min), "
-        "Realtime-tag, SupportNote, Assessment, ShortNote"
+    st.write(
+        "Upload en Excel-fil med kolonnerne:\n"
+        "`RouteId`, `DriverId`, `Date`, `Slug`, `ActualStartTime`, "
+        "`REVISEDActualStartTime`, `ActualEndTime`, `ActualDuration (min)`, "
+        "`REVISEDActualDuration (min)`, `EstimatedStartTime`, `EstimatedEndTime`, "
+        "`EstimateDuration (min)`, `Deviation (min)`, `Realtime-tag`, "
+        "`SupportNote`, `Assessment`, `ShortNote`"
     )
     
     uploaded = st.file_uploader("Vælg Deviations Excel-fil", type=["xlsx", "xls"], key="ikea_dev")
@@ -46,7 +40,6 @@ def ikea_nl_deviations_tab():
         st.error(f"Kunne ikke læse filen: {e}")
         return
 
-    # Tjek for alle nødvendige kolonner
     required = [
         "RouteId", "DriverId", "Date", "Slug", "ActualStartTime", "REVISEDActualStartTime",
         "ActualEndTime", "ActualDuration (min)", "REVISEDActualDuration (min)", "EstimatedStartTime",
@@ -58,30 +51,29 @@ def ikea_nl_deviations_tab():
         st.error("Manglende kolonner: " + ", ".join(missing))
         return
 
-    # Fjern rækker uden SupportNote
+    # Drop rækker uden supportnoter
     df = df.dropna(subset=["SupportNote"])
     if df.empty:
         st.error("Ingen rækker med SupportNote fundet.")
         return
 
-    # Analyser supportnoter for keywords
+    # Keyword-analyse
     df["Keywords"] = df["SupportNote"].apply(lambda n: analyse_supportnote(n)[0])
     df["MatchingKeyword"] = df["SupportNote"].apply(lambda n: analyse_supportnote(n)[1])
 
-    # Formatér dato-kolonnen
+    # Formatér dato
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
 
-    # Vis resultater
     cols_out = required + ["Keywords", "MatchingKeyword"]
     st.dataframe(df[cols_out])
 
-    # Download-knap til analyseret fil
+    # Download
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="xlsxwriter") as writer:
         df.to_excel(writer, index=False, sheet_name="IKEA_NL_Deviations")
     buf.seek(0)
     st.download_button(
-        label="Download analyseret Deviations",
+        "Download analyseret Deviations",
         data=buf,
         file_name="ikea_nl_deviations.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
