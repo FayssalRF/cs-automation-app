@@ -1,5 +1,3 @@
-# controlling.py
-
 import streamlit as st
 import pandas as pd
 import io
@@ -22,7 +20,8 @@ def analyse_supportnote(note):
     if matched:
         matched = list(set(matched))
         return "Ja", ", ".join(matched)
-    return "Nej", ""
+    else:
+        return "Nej", ""
 
 def controlling_tab():
     st.title("Controlling Report Analyse")
@@ -36,9 +35,7 @@ def controlling_tab():
         "https://moverdatawarehouse.azurewebsites.net/download/DurationControlling"
         f"?apikey=2d633b&Userid=74859&Yearweek={yearweek}"
     )
-    st.markdown(
-        f"[Download Controlling report for sidste uge (ISO {last_week_date.isocalendar()[1]:02d})]({link})"
-    )
+    st.markdown(f"[Download Controlling report for sidste uge (ISO {last_week_date.isocalendar()[1]:02d})]({link})")
     
     st.write(
         "Upload en Excel-fil med controlling data, der indeholder kolonnerne:\n"
@@ -95,7 +92,7 @@ def controlling_tab():
         st.markdown("#### Resultater per kunde")
         for customer in sorted(df["CustomerName"].unique()):
             with st.expander(f"Kunde: {customer}"):
-                # Kun rækker med Keywords == "Ja"
+                # Entries med Keywords == "Ja"
                 df_yes = df[
                     (df["CustomerName"] == customer) &
                     (df["Keywords"] == "Ja")
@@ -106,7 +103,7 @@ def controlling_tab():
                 else:
                     st.write("Ingen rækker med Keywords = 'Ja'.")
                 
-                # Rækker med Keywords == "Nej"
+                # Entries med Keywords == "Nej"
                 df_no = df[
                     (df["CustomerName"] == customer) &
                     (df["Keywords"] == "Nej")
@@ -128,6 +125,9 @@ def controlling_tab():
             file_name="analyseret_controlling_report.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
+        # Horisontal linje som visuel adskillelse
+        st.markdown("---")
     
     # IKEA NL Deviations under Controlling tab
     with st.expander("IKEA NL Deviations"):
