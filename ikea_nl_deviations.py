@@ -1,3 +1,5 @@
+# ikea_nl_deviations.py
+
 import streamlit as st
 import pandas as pd
 import io
@@ -30,7 +32,11 @@ def ikea_nl_deviations_tab():
         "`SupportNote`, `Assessment`, `ShortNote`"
     )
     
-    uploaded = st.file_uploader("Vælg Deviations Excel-fil", type=["xlsx", "xls"], key="ikea_dev")
+    uploaded = st.file_uploader(
+        "Vælg Deviations Excel-fil",
+        type=["xlsx", "xls"],
+        key="ikea_dev"
+    )
     if not uploaded:
         return
 
@@ -41,17 +47,18 @@ def ikea_nl_deviations_tab():
         return
 
     required = [
-        "RouteId", "DriverId", "Date", "Slug", "ActualStartTime", "REVISEDActualStartTime",
-        "ActualEndTime", "ActualDuration (min)", "REVISEDActualDuration (min)", "EstimatedStartTime",
-        "EstimatedEndTime", "EstimateDuration (min)", "Deviation (min)", "Realtime-tag",
-        "SupportNote", "Assessment", "ShortNote"
+        "RouteId", "DriverId", "Date", "Slug", "ActualStartTime",
+        "REVISEDActualStartTime", "ActualEndTime", "ActualDuration (min)",
+        "REVISEDActualDuration (min)", "EstimatedStartTime",
+        "EstimatedEndTime", "EstimateDuration (min)", "Deviation (min)",
+        "Realtime-tag", "SupportNote", "Assessment", "ShortNote"
     ]
     missing = [c for c in required if c not in df.columns]
     if missing:
         st.error("Manglende kolonner: " + ", ".join(missing))
         return
 
-    # Drop rækker uden supportnoter
+    # Drop rækker uden SupportNote
     df = df.dropna(subset=["SupportNote"])
     if df.empty:
         st.error("Ingen rækker med SupportNote fundet.")
@@ -67,7 +74,7 @@ def ikea_nl_deviations_tab():
     cols_out = required + ["Keywords", "MatchingKeyword"]
     st.dataframe(df[cols_out])
 
-    # Download
+    # Download af analyseret Deviations-rapport
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="xlsxwriter") as writer:
         df.to_excel(writer, index=False, sheet_name="IKEA_NL_Deviations")
