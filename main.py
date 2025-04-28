@@ -34,102 +34,55 @@ st.markdown(
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons:outlined" rel="stylesheet">
     <style>
-    /* Grundlæggende styling: vi fjerner den faste baggrundsfarve for tekst, så ikke alt vises med hvid baggrund */
     body, .main, p, li, .stMarkdown {
         font-family: 'Open Sans', sans-serif;
         font-size: 16pt;
         font-weight: 400;
-        color: #01293D; /* Primary text color (Midnight Blue) */
-        /* background-color: #FFFFFF; */ /* Fjernet for at undgå hvid baggrund på alt tekst */
+        color: #01293D;
     }
     h1, h2, h3, h4 {
         font-family: 'Open Sans', sans-serif;
         font-weight: 400;
         margin-bottom: 10px;
     }
-    h1 {
-        font-size: 2.5em;
-        color: #01293D;
-    }
-    h2 {
-        font-size: 2em;
-        color: #003F63; /* Daylight Blue */
-    }
-    h3 {
-        font-size: 1.75em;
-        color: #01293D;
-    }
-    /* Centering header content */
-    .header {
-        text-align: center;
-        padding: 20px;
-    }
-    /* Primary buttons: rounded, solid fill */
-    .stButton > button {
-        border-radius: 25px;
-        font-size: 14pt;
-        font-weight: 700;
-        background-color: #01293D; /* Midnight Blue for primary actions */
-        color: #FFFFFF;
-        border: none;
-        padding: 10px 24px;
-        cursor: pointer;
-    }
-    /* Secondary buttons: outlined style */
-    .stButton > button.secondary {
-        background-color: transparent;
-        color: #01293D;
-        border: 2px solid #01293D;
-    }
-    /* Tab styling */
-    [data-baseweb="tab"] {
-        margin-right: 30px;
-    }
-    .stTabs [data-baseweb="tab"] button {
-        font-size: 14pt;
-        font-weight: 700;
-        color: #01293D;
-    }
-    .stTabs [data-baseweb="tab"] button:focus, .stTabs [data-baseweb="tab"] button:hover {
-        color: #003F63;
-    }
-    /* Footer styling */
-    .footer {
-        text-align: center;
-        padding: 20px;
-        font-size: 0.9em;
-        color: #01293D;
-    }
+    h1 { font-size: 2.5em; color: #01293D; }
+    h2 { font-size: 2em; color: #003F63; }
+    h3 { font-size: 1.75em; color: #01293D; }
+    .header { text-align: center; padding: 20px; }
+    .stButton > button { border-radius:25px; font-size:14pt; font-weight:700; background-color:#01293D; color:#FFF; border:none; padding:10px 24px; cursor:pointer; }
+    .stButton > button.secondary { background-color:transparent; color:#01293D; border:2px solid #01293D; }
+    [data-baseweb="tab"] { margin-right:30px; }
+    .stTabs [data-baseweb="tab"] button { font-size:14pt; font-weight:700; color:#01293D; }
+    .stTabs [data-baseweb="tab"] button:focus, .stTabs [data-baseweb="tab"] button:hover { color:#003F63; }
+    .footer { text-align:center; padding:20px; font-size:0.9em; color:#01293D; }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Header-sektion med logo hentet fra URL og ny sætning - alt centreret.
+# Header med logo
 st.markdown(
     """
     <div class="header">
-        <!-- Logo hentes fra en ekstern URL -->
-        <img src="https://raw.githubusercontent.com/FayssalRF/cs-automation-app/refs/heads/main/moverLogotype_blue.png" alt="Mover Logo" style="max-width: 300px;">
+        <img src="https://raw.githubusercontent.com/FayssalRF/cs-automation-app/refs/heads/main/moverLogotype_blue.png" alt="Mover Logo" style="max-width:300px;">
         <h2>We are changing logistics for good</h2>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-# Importer de enkelte moduler for fanerne.
-from forside import forside_tab
+# Importer fanernerom forside import forside_tab
 from controlling import controlling_tab
 from solar_weekly import solar_weekly_tab
 from solar_co2 import solar_co2_tab
 from revenue import revenue_tab
 
-# Opret fanebjælken med de forskellige sektioner.
+# Opret fanebjælken
 tabs = st.tabs([
     "Forside",
     "Controlling Report Analyzer",
     "Solar Weekly Report",
-    "Solar CO2 Report",
+    "Solar CO₂ Report",
     "Revenue analyzer"
 ])
 
@@ -144,7 +97,7 @@ with tabs[3]:
 with tabs[4]:
     revenue_tab()
 
-# Footer-sektion.
+# Footer
 st.markdown(
     """
     <div class="footer">
