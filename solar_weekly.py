@@ -6,7 +6,7 @@ import io
 from datetime import date, timedelta
 
 def solar_weekly_tab():
-    st.title("Solar Weekly Report *(stadig under udvikling)*")
+    st.title("Solar Weekly Report - *(stadig under udvikling)*")
 
     # 1. Automatisk beregning af sidste uges periode (mandag–søndag)
     today = date.today()
