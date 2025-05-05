@@ -20,6 +20,7 @@ lageret ikke klar
 afsender ikke klar
 florist åbnede senere
 florist forsinket
+florist er forsinket
 forsinket florist
 butikken ikke åben
 ikke åben butik
