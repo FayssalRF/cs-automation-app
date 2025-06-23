@@ -15,7 +15,7 @@ def load_revenue_df(uploaded_file) -> pd.DataFrame:
     df.columns = df.columns.str.strip()
     return df
 
-def download_df(df: pd.DataFrame, label: str, file_name: str) -> None:
+def download_df(df: pd.DataFrame], label: str, file_name: str) -> None:
     """Pakker en DataFrame til en Streamlit-download-knap."""
     buf = io.BytesIO()
     df.to_excel(buf, index=False, engine="xlsxwriter")
@@ -65,7 +65,7 @@ def revenue_tab():
         return
 
     # Kort preview med YTD 2025
-    preview_cols = [c for c in ["Company Name", "Name", "ID", total_col] if c in df_new.columns]
+    preview_cols = [c for c in ["Name", "ID", total_col] if c in df_new.columns]
     st.dataframe(df_new[preview_cols])
 
     # 5) Formular: angiv estimeret årlig omsætning pr. kunde
@@ -73,9 +73,9 @@ def revenue_tab():
     with st.form("estimation_form"):
         potentials: dict[int, float] = {}
         for idx, row in df_new.iterrows():
-            cust = row.get("Company Name") or row.get("CompanyName", "")
-            cid  = row.get("ID", "")
-            label = f"{cust} ({cid})"
+            profile = row.get("Name", "")
+            cust_id = row.get("ID", "")
+            label = f"{profile} ({cust_id})"
             potentials[idx] = st.number_input(
                 label,
                 min_value=0.0,
@@ -115,7 +115,7 @@ def revenue_tab():
         st.warning("Kolonnen 'Product' findes ikke; kan ikke vise fordeling.")
 
     # 9) Endelig rapport: præcis de ønskede kolonner
-    out_cols = ["Company Name", "Name", "ID", "Category", "Sales", "SDM", "Product"]
+    out_cols = ["Name", "ID", "Category", "Sales", "SDM", "Product"]
     out_cols = [c for c in out_cols if c in df_new.columns]
 
     st.subheader("Detaljer for nye kunder")
