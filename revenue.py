@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 def load_revenue_df(uploaded_file) -> pd.DataFrame:
     """Loader den uploadede Excel-rapport med header i række 5 og strip’er alle kolonnenavne."""
     uploaded_file.seek(0)
-    # header=4 læser 5. række som kolonneoverskrift (0-indexed)
     df = pd.read_excel(uploaded_file, engine="openpyxl", header=4)
     df.columns = df.columns.str.strip()
     return df
@@ -57,7 +56,10 @@ def revenue_tab():
     mask_new       = pd.to_numeric(df[total_col], errors="coerce").fillna(0) > 0
     df_new = df[mask_prev_zero & mask_new].copy()
 
-    st.subheader(f"Fundet {len(df_new)} nye kunder (kun omsætning i 2025)")
+    # 4b) Frasortér alle med <1.000 kr. i YTD-2025
+    df_new = df_new[pd.to_numeric(df_new[total_col], errors="coerce") > 1000]
+
+    st.subheader(f"Fundet {len(df_new)} nye kunder med ≥1.000 kr. i 2025-omsætning")
     if df_new.empty:
         st.info("Ingen nye kunder efter kriteriet.")
         return
@@ -89,7 +91,7 @@ def revenue_tab():
 
     # 6) Beregn succes-flag (>=10%)
     df_new["EstPotential"]   = df_new.index.to_series().map(potentials)
-    df_new["OnboardSuccess"] = df_new[total_col] >= 0.1 * df_new["EstPotential"]
+    df_new["OnboardSuccess"] = pd.to_numeric(df_new[total_col], errors="coerce") >= 0.1 * df_new["EstPotential"]
 
     # 7) Dashboard-metrics
     total   = len(df_new)
