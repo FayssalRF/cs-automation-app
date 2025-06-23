@@ -1,140 +1,143 @@
+import re
 import io
+
 import pandas as pd
 import streamlit as st
 
 # --- Hjælpefunktioner -------------------------------------------------------
 
 @st.cache_data
-def load_keywords(path="keywords.txt"):
+def load_keywords(path: str = "keywords.txt") -> list[str]:
     """Loader liste af keywords fra fil."""
     with open(path, "r", encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip()]
 
-def find_keywords(text, keywords):
-    """Finder alle keywords i en tekst."""
-    txt = str(text).lower()
-    return [kw for kw in keywords if kw.lower() in txt]
-
-def analyze_supportnote(df: pd.DataFrame) -> pd.DataFrame:
-    """Analyserer SupportNote som før."""
-    kws = load_keywords()
-    out = df.copy()
-    out["SupportNoteKeywords"] = out["SupportNote"].apply(lambda x: find_keywords(x, kws))
-    out["SupportNoteMatch"]    = out["SupportNoteKeywords"].apply(lambda lst: "Ja" if lst else "Nej")
-    return out[[
-        "SessionId","Date","CustomerId","CustomerName",
-        "SupportNote","SupportNoteMatch","SupportNoteKeywords"
-    ]]
-
-def analyze_notes(df: pd.DataFrame) -> pd.DataFrame:
-    """Analyserer Notes med samme keyword-logik."""
-    kws = load_keywords()
-    out = df.copy()
-    out["NotesKeywords"] = out["Notes"].apply(lambda x: find_keywords(x, kws))
-    out["NotesMatch"]    = out["NotesKeywords"].apply(lambda lst: "Ja" if lst else "Nej")
-    return out[[
-        "SessionId","Date","CustomerId","CustomerName",
-        "Notes","NotesMatch","NotesKeywords"
-    ]]
-
-def analyze_quicknotes(df: pd.DataFrame) -> pd.DataFrame:
-    """Finder kun de rækker i QuickNotes, der matcher de 3 mønstre."""
-    patterns = [
-        "Solutions - Delay",
-        "Solutions - Customer deviation",
-        "Courier - Extra loading time"
-    ]
-    out = df.copy()
-    out["QuickNotesMatch"] = out["QuickNotes"].apply(
-        lambda x: any(p.lower() in str(x).lower() for p in patterns)
+def download_df(df: pd.DataFrame, label: str, file_name: str) -> None:
+    """Pakker en DataFrame til en Streamlit-download-knap."""
+    buf = io.BytesIO()
+    df.to_excel(buf, index=False, engine="xlsxwriter")
+    st.download_button(
+        label=label,
+        data=buf.getvalue(),
+        file_name=file_name,
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    return out[out["QuickNotesMatch"]][[
-        "SessionId","Date","CustomerId","CustomerName","QuickNotes"
-    ]]
 
-# --- Streamlit faneblad -----------------------------------------------------
+def analyze_supportnote(df: pd.DataFrame, keywords: list[str]) -> pd.DataFrame:
+    """Analyserer SupportNote med keyword-match."""
+    pattern = "|".join(re.escape(kw) for kw in keywords)
+    out = df.copy()
+    out["SupportNoteMatch"]    = out["SupportNote"].fillna("").str.contains(pattern, case=False, regex=True)
+    out["SupportNoteKeywords"] = out["SupportNote"].apply(
+        lambda txt: [kw for kw in keywords if kw.lower() in str(txt).lower()]
+    )
+    return out[
+        [
+            "SessionId",
+            "Date",
+            "CustomerId",
+            "CustomerName",
+            "SupportNote",
+            "SupportNoteMatch",
+            "SupportNoteKeywords",
+        ]
+    ]
+
+# --- Streamlit-faneblad -----------------------------------------------------
 
 def controlling_tab():
     st.header("Controlling-analyse")
 
-    # 1) Link til ISO-uge-rapport
+    # ISO-rapport
     st.markdown("### Download seneste ISO-uge-rapport")
-    iso_link = "https://moverdatawarehouse.../latest_iso_week_report.xlsx"
-    st.markdown(f"[Hent ISO-rapport her ↗]({iso_link})")
+    st.markdown("[Hent ISO-rapport her ↗](https://moverdatawarehouse.../latest_iso_week_report.xlsx)")
 
-    # 2) Upload bruger-fil
+    # Upload
     uploaded = st.file_uploader("Upload din controlling-rapport (.xlsx)", type=["xlsx"])
     if not uploaded:
         return
+
     df = pd.read_excel(uploaded)
+    df = df[df["CustomerName"] != "IKEA NL"]  # ekskluder IKEA NL
 
-    # 3) Ekskluder IKEA NL
-    df = df[df["CustomerName"] != "IKEA NL"]
-
-    # 4) Fjern rækker uden tekst i SupportNote, Notes & QuickNotes
-    mask_blank = (
-        (df["SupportNote"].fillna("").astype(str).str.strip() == "") &
-        (df["Notes"].fillna("").astype(str).str.strip() == "") &
-        (df["QuickNotes"].fillna("").astype(str).str.strip() == "")
-    )
+    # Fjern rækker uden nogen noter eller QuickNotes
+    blank_support = df["SupportNote"].fillna("").str.strip() == ""
+    blank_notes   = df["Notes"].fillna("").str.strip() == ""
+    blank_quick   = df["QuickNotes"].fillna("").str.strip() == ""
+    mask_blank    = blank_support & blank_notes & blank_quick
     df = df[~mask_blank]
 
-    # --- Hovedanalyse --------------------------------------------------------
+    # QuickNotes-analyse (vektoriseret)
+    PAT_QN = r"(Solutions - Delay|Solutions - Customer deviation|Courier - Extra loading time)"
+    df["QuickNotesMatch"] = df["QuickNotes"].fillna("").str.contains(PAT_QN, case=False, regex=True)
+    df_q = df[df["QuickNotesMatch"]].copy()
 
-    st.subheader("1) QuickNotes-analyse")
-    df_q = analyze_quicknotes(df)
-    if not df_q.empty:
-        for cust, grp in df_q.groupby("CustomerName"):
-            with st.expander(cust):
-                st.dataframe(grp)
-    else:
-        st.write("Ingen relevante QuickNotes fundet.")
+    # Notes-analyse for de rækker uden QuickNotes-match
+    df_no_q = df[~df.index.isin(df_q.index)].copy()
+    keywords = load_keywords()
+    PAT_NOTES = "|".join(re.escape(kw) for kw in keywords)
+    df_no_q["NotesMatch"] = df_no_q["Notes"].fillna("").str.contains(PAT_NOTES, case=False, regex=True)
 
-    st.subheader("2) Notes-analyse (hvor QuickNotes er tomme eller uden match)")
-    df_no_q = df[~df.index.isin(df_q.index)]
-    df_n    = analyze_notes(df_no_q)
+    # KPI-metrics
+    total_rows = len(df)
+    qn_count   = df_q.shape[0]
+    notes_yes  = int(df_no_q["NotesMatch"].sum())
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Total rækker",           f"{total_rows}")
+    c2.metric("QuickNotes-matches",     f"{qn_count}")
+    c3.metric("Notes-matches (Ja)",     f"{notes_yes}")
 
-    if not df_n.empty:
-        for cust, grp in df_n.groupby("CustomerName"):
-            with st.expander(cust):
-                df_yes = grp[grp["NotesMatch"] == "Ja"]
-                if not df_yes.empty:
-                    st.markdown("**Matches (Ja)**")
-                    st.dataframe(df_yes)
-                df_no = grp[grp["NotesMatch"] == "Nej"]
-                if not df_no.empty:
-                    st.markdown("**No Matches (Nej)**")
-                    st.dataframe(df_no)
-    else:
-        st.write("Ingen Notes-matches fundet.")
+    # Tabs til detalje-analyse og SupportNote-analyse
+    tab1, tab2 = st.tabs(["🔍 Detail-analyse", "📝 SupportNote-analyse"])
 
-    # Download af samlet hovedanalyse
-    main_df = pd.concat([df_q, df_n], ignore_index=True)
-    buf = io.BytesIO()
-    main_df.to_excel(buf, index=False, engine="xlsxwriter")
-    st.download_button(
-        label="Download Hovedanalyse (QuickNotes + Notes)",
-        data=buf.getvalue(),
-        file_name="controlling_hovedanalyse.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    # --- Detail-analyse ------------------------------------------------------
+    with tab1:
+        st.subheader("1) QuickNotes-analyse")
+        if not df_q.empty:
+            for cust, grp in df_q.groupby("CustomerName"):
+                with st.expander(cust):
+                    st.dataframe(grp[["SessionId", "Date", "CustomerId", "CustomerName", "QuickNotes"]])
+        else:
+            st.write("Ingen relevante QuickNotes fundet.")
 
-    # --- SupportNote-analyse i separat dropdown -----------------------------
+        st.subheader("2) Notes-analyse")
+        if not df_no_q.empty:
+            for cust, grp in df_no_q.groupby("CustomerName"):
+                with st.expander(cust):
+                    df_yes = grp[grp["NotesMatch"]]
+                    df_no  = grp[~grp["NotesMatch"]]
+                    if not df_yes.empty:
+                        st.markdown("**Matches (Ja)**")
+                        st.dataframe(df_yes[["SessionId", "Date", "CustomerId", "CustomerName", "Notes", "NotesMatch"]])
+                    if not df_no.empty:
+                        st.markdown("**No Matches (Nej)**")
+                        st.dataframe(df_no[["SessionId", "Date", "CustomerId", "CustomerName", "Notes", "NotesMatch"]])
+        else:
+            st.write("Ingen Notes-matches fundet.")
 
-    with st.expander("SupportNote-analyse"):
-        df_s = analyze_supportnote(df)
-        for cust, grp in df_s.groupby("CustomerName"):
-            with st.expander(cust):
-                st.dataframe(grp)
-
-        buf2 = io.BytesIO()
-        df_s.to_excel(buf2, index=False, engine="xlsxwriter")
-        st.download_button(
-            label="Download SupportNote-analyse",
-            data=buf2.getvalue(),
-            file_name="supportnote_analyse.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        # Download hovedanalyse
+        main_df = pd.concat(
+            [
+                df_q[["SessionId", "Date", "CustomerId", "CustomerName", "QuickNotes"]],
+                df_no_q[["SessionId", "Date", "CustomerId", "CustomerName", "Notes", "NotesMatch"]],
+            ],
+            ignore_index=True,
         )
+        download_df(main_df, "Download Hovedanalyse (QuickNotes + Notes)", "controlling_hovedanalyse.xlsx")
+
+    # --- SupportNote-analyse --------------------------------------------------
+    with tab2:
+        st.subheader("SupportNote-analyse")
+        df_s = analyze_supportnote(df, keywords)
+        if not df_s.empty:
+            for cust, grp in df_s.groupby("CustomerName"):
+                with st.expander(cust):
+                    st.dataframe(grp)
+        else:
+            st.write("Ingen SupportNote-matches fundet.")
+
+        download_df(df_s, "Download SupportNote-analyse", "supportnote_analyse.xlsx")
+
 
 if __name__ == "__main__":
     st.set_page_config(page_title="CS Automation – Controlling")
