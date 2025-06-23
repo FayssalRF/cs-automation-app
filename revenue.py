@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 
 @st.cache_data
 def load_revenue_df(uploaded_file) -> pd.DataFrame:
-    """Loader den uploadede Excel-rapport og strip’er alle kolonnenavne."""
+    """Loader den uploadede Excel-rapport med header i række 5 og strip’er alle kolonnenavne."""
     uploaded_file.seek(0)
-    df = pd.read_excel(uploaded_file, engine="openpyxl")
+    # header=4 læser 5. række som kolonneoverskrift (0-indexed)
+    df = pd.read_excel(uploaded_file, engine="openpyxl", header=4)
     df.columns = df.columns.str.strip()
     return df
 
@@ -61,7 +62,7 @@ def revenue_tab():
         st.info("Ingen nye kunder efter kriteriet.")
         return
 
-    # Kort preview med YTD-2025
+    # Kort preview med YTD 2025
     preview_cols = [c for c in ["Company Name", "Name", "ID", total_col] if c in df_new.columns]
     st.dataframe(df_new[preview_cols])
 
