@@ -1,134 +1,135 @@
-import streamlit as st
-import pandas as pd
 import io
-from datetime import date, timedelta
-from ikea_nl_deviations import ikea_nl_deviations_tab
+import requests
+import pandas as pd
+import streamlit as st
 
-# Indlæs keywords fra keywords.txt
-try:
-    with open("keywords.txt", "r", encoding="utf-8") as file:
-        all_keywords = [line.strip().lower() for line in file if line.strip()]
-except Exception as e:
-    st.error("Fejl ved indlæsning af keywords: " + str(e))
-    all_keywords = []
+# --- Hjælpefunktioner -------------------------------------------------------
 
-def analyse_supportnote(note):
-    if pd.isna(note):
-        return "Nej", ""
-    note_lower = str(note).lower()
-    matched = [kw for kw in all_keywords if kw in note_lower]
-    if matched:
-        matched = list(set(matched))
-        return "Ja", ", ".join(matched)
-    else:
-        return "Nej", ""
+@st.cache_data
+def load_keywords(path="keywords.txt"):
+    """Loader liste af keywords fra fil."""
+    with open(path, "r", encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip()]
+
+def find_keywords(text, keywords):
+    """Finder alle keywords i en tekst."""
+    txt = str(text).lower()
+    return [kw for kw in keywords if kw.lower() in txt]
+
+def analyze_supportnote(df: pd.DataFrame) -> pd.DataFrame:
+    """Analyserer SupportNote som før."""
+    kws = load_keywords()
+    out = df.copy()
+    out["SupportNoteKeywords"] = out["SupportNote"].apply(lambda x: find_keywords(x, kws))
+    out["SupportNoteMatch"] = out["SupportNoteKeywords"].apply(lambda lst: "Ja" if lst else "Nej")
+    return out[[
+        "SessionId", "Date", "CustomerId", "CustomerName",
+        "SupportNote", "SupportNoteMatch", "SupportNoteKeywords"
+    ]]
+
+def analyze_notes(df: pd.DataFrame) -> pd.DataFrame:
+    """Analyserer Notes med samme keyword-logik."""
+    kws = load_keywords()
+    out = df.copy()
+    out["NotesKeywords"] = out["Notes"].apply(lambda x: find_keywords(x, kws))
+    out["NotesMatch"]    = out["NotesKeywords"].apply(lambda lst: "Ja" if lst else "Nej")
+    return out[[
+        "SessionId", "Date", "CustomerId", "CustomerName",
+        "Notes", "NotesMatch", "NotesKeywords"
+    ]]
+
+def analyze_quicknotes(df: pd.DataFrame) -> pd.DataFrame:
+    """Finder kun de rækker i QuickNotes, der matcher de 3 mønstre."""
+    patterns = [
+        "Solutions - Delay",
+        "Solutions - Customer deviation",
+        "Courier - Extra loading time"
+    ]
+    out = df.copy()
+    out["QuickNotesMatch"] = out["QuickNotes"].apply(
+        lambda x: any(p.lower() in str(x).lower() for p in patterns)
+    )
+    # Kun behold matchede rækker
+    out = out[out["QuickNotesMatch"]]
+    return out[[
+        "SessionId", "Date", "CustomerId", "CustomerName",
+        "QuickNotes"
+    ]]
+
+# --- Streamlit faneblad -----------------------------------------------------
 
 def controlling_tab():
-    st.title("Controlling Report Analyse")
-    st.markdown("### Velkommen til appen til analyse af controlling rapporter")
-    
-    # Auto-beregn sidste ISO-uge
-    today = date.today()
-    last_week_date = today - timedelta(days=7)
-    yearweek = last_week_date.strftime("%Y") + f"{last_week_date.isocalendar()[1]:02d}"
-    link = (
-        "https://moverdatawarehouse.azurewebsites.net/download/DurationControlling"
-        f"?apikey=2d633b&Userid=74859&Yearweek={yearweek}"
+    st.header("Controlling-analyse")
+
+    # 1) Link til ISO-uge-rapport (uændret fra før)
+    st.markdown("### Download seneste ISO-uge-rapport")
+    iso_link = "https://moverdatawarehouse.../latest_iso_week_report.xlsx"
+    st.markdown(f"[Hent ISO-rapport her ↗]({iso_link})")
+
+    # 2) Upload bruger-fil
+    uploaded = st.file_uploader("Upload din nye controlling-rapport (.xlsx)", type=["xlsx"])
+    if not uploaded:
+        return
+
+    df = pd.read_excel(uploaded)
+
+    # 3) Exclude IKEA NL
+    df = df[df["CustomerName"] != "IKEA NL"]
+
+    # --- Hovedanalyse --------------------------------------------------------
+
+    st.subheader("1) QuickNotes-analyse")
+    df_q = analyze_quicknotes(df)
+    if not df_q.empty:
+        for cust, grp in df_q.groupby("CustomerName"):
+            with st.expander(cust):
+                st.dataframe(grp)
+    else:
+        st.write("Ingen relevante QuickNotes fundet.")
+
+    st.subheader("2) Notes-analyse (hvor QuickNotes er tom)")
+    df_no_qn = df[
+        df["QuickNotes"].isna() |
+        (df["QuickNotes"].astype(str).str.strip() == "")
+    ]
+    df_n = analyze_notes(df_no_qn)
+    if not df_n.empty:
+        for cust, grp in df_n.groupby("CustomerName"):
+            with st.expander(cust):
+                st.dataframe(grp)
+    else:
+        st.write("Ingen Notes-matches fundet.")
+
+    # 3) Download af samlet hovedanalyse
+    main_df = pd.concat([df_q, df_n], ignore_index=True)
+    towrite = io.BytesIO()
+    main_df.to_excel(towrite, index=False, engine="xlsxwriter")
+    st.download_button(
+        label="Download Hovedanalyse (QuickNotes + Notes)",
+        data=towrite.getvalue(),
+        file_name="controlling_hovedanalyse.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    st.markdown(f"[Download Controlling report for sidste uge (ISO {last_week_date.isocalendar()[1]:02d})]({link})")
-    
-    st.write(
-        "Upload en Excel-fil med controlling data, der indeholder kolonnerne:\n"
-        "`SessionId`, `Date`, `CustomerId`, `CustomerName`, "
-        "`EstDuration`, `ActDuration`, `DurationDifference`, `SupportNote`"
-    )
-    
-    uploaded_file = st.file_uploader(
-        "Vælg controlling Excel-fil",
-        type=["xlsx", "xls"],
-        key="controlling"
-    )
-    if uploaded_file:
-        try:
-            df = pd.read_excel(uploaded_file, engine="openpyxl")
-        except Exception as e:
-            st.error("Fejl ved indlæsning af fil: " + str(e))
-            return
-        
-        # Tjek nødvendige kolonner
-        required = [
-            "SessionId", "Date", "CustomerId", "CustomerName",
-            "EstDuration", "ActDuration", "DurationDifference", "SupportNote"
-        ]
-        missing = [c for c in required if c not in df.columns]
-        if missing:
-            st.error("Manglende kolonner: " + ", ".join(missing))
-            return
-        
-        # Ryd op i data
-        before = len(df)
-        df = df.dropna(subset=["SupportNote", "CustomerName"])
-        dropped = before - len(df)
-        if dropped:
-            st.info(f"{dropped} rækker droppet (manglende SupportNote eller CustomerName).")
-        
-        # Exkluder IKEA NL (håndteres separat)
-        df = df[~df["CustomerName"].str.contains("IKEA NL", case=False, na=False)]
-        
-        # Analyser support-noter
-        df["Keywords"] = df["SupportNote"].apply(lambda n: analyse_supportnote(n)[0])
-        df["MatchingKeyword"] = df["SupportNote"].apply(lambda n: analyse_supportnote(n)[1])
-        
-        # Formatér dato
-        df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
-        
-        output_cols = required + ["Keywords", "MatchingKeyword"]
-        
-        # Overordnede analyseresultater
-        st.markdown("#### Overordnede analyseresultater")
-        st.dataframe(df[output_cols])
-        
-        # Resultater per kunde
-        st.markdown("#### Resultater per kunde")
-        for customer in sorted(df["CustomerName"].unique()):
-            with st.expander(f"Kunde: {customer}"):
-                # Entries med Keywords == "Ja"
-                df_yes = df[
-                    (df["CustomerName"] == customer) &
-                    (df["Keywords"] == "Ja")
-                ]
-                st.markdown("**Entries with Keywords = Yes:**")
-                if not df_yes.empty:
-                    st.dataframe(df_yes[output_cols])
-                else:
-                    st.write("Ingen rækker med Keywords = 'Ja'.")
-                
-                # Entries med Keywords == "Nej"
-                df_no = df[
-                    (df["CustomerName"] == customer) &
-                    (df["Keywords"] == "Nej")
-                ]
-                st.markdown("**Entries with Keywords = No:**")
-                if not df_no.empty:
-                    st.dataframe(df_no[output_cols])
-                else:
-                    st.write("Ingen rækker med Keywords = 'Nej'.")
-        
-        # Download af analyseret controlling rapport
-        buf = io.BytesIO()
-        with pd.ExcelWriter(buf, engine="xlsxwriter") as writer:
-            df.to_excel(writer, index=False, sheet_name="Analyseret")
-        buf.seek(0)
+
+    # --- SupportNote-analyse i separat dropdown -----------------------------
+
+    with st.expander("SupportNote-analyse"):
+        df_s = analyze_supportnote(df)
+        for cust, grp in df_s.groupby("CustomerName"):
+            with st.expander(cust):
+                st.dataframe(grp)
+
+        buf2 = io.BytesIO()
+        df_s.to_excel(buf2, index=False, engine="xlsxwriter")
         st.download_button(
-            "Download analyseret controlling rapport",
-            data=buf,
-            file_name="analyseret_controlling_report.xlsx",
+            label="Download SupportNote-analyse",
+            data=buf2.getvalue(),
+            file_name="supportnote_analyse.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-        # Horisontal linje som visuel adskillelse
-        st.markdown("---")
-    
-    # IKEA NL Deviations under Controlling tab
-    with st.expander("IKEA NL Deviations"):
-        ikea_nl_deviations_tab()
+# --- Hvis denne fil køres standalone ----------------------------------------
+
+if __name__ == "__main__":
+    st.set_page_config(page_title="CS Automation – Controlling")
+    controlling_tab()
