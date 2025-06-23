@@ -88,7 +88,7 @@ def controlling_tab():
     c3.metric("Notes-matches (Ja)",     f"{notes_yes}")
 
     # Tabs til detalje-analyse og SupportNote-analyse
-    tab1, tab2 = st.tabs(["🔍 Detail-analyse", "📝 SupportNote-analyse"])
+    tab1, tab2 = st.tabs(["🔍 QuickNotes/Note - analyse", "📝 SupportNote - analyse"])
 
     # --- Detail-analyse ------------------------------------------------------
     with tab1:
