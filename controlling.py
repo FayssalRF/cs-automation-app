@@ -48,9 +48,15 @@ def analyze_supportnote(df: pd.DataFrame, keywords: list[str]) -> pd.DataFrame:
 def controlling_tab():
     st.header("Controlling-analyse")
 
-    # ISO-rapport
-    st.markdown("### Download seneste ISO-uge-rapport")
-    st.markdown("[Hent ISO-rapport her ↗](https://moverdatawarehouse.../latest_iso_week_report.xlsx)")
+# Auto-beregn sidste ISO-uge
+    today = date.today()
+    last_week_date = today - timedelta(days=7)
+    yearweek = last_week_date.strftime("%Y") + f"{last_week_date.isocalendar()[1]:02d}"
+    link = (
+        "https://moverdatawarehouse.azurewebsites.net/download/DurationControlling"
+        f"?apikey=2d633b&Userid=74859&Yearweek={yearweek}"
+    )
+    st.markdown(f"[Download Controlling report for sidste uge (ISO {last_week_date.isocalendar()[1]:02d})]({link})")
 
     # Upload
     uploaded = st.file_uploader("Upload din controlling-rapport (.xlsx)", type=["xlsx"])
