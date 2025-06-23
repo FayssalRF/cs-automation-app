@@ -73,9 +73,9 @@ def controlling_tab():
 
     # 4) Fjern rækker uden tekst i SupportNote, Notes & QuickNotes
     mask_blank = (
-        df["SupportNote"].fillna("").astype(str).str.strip() == "" &
-        df["Notes"].fillna("").astype(str).str.strip() == "" &
-        df["QuickNotes"].fillna("").astype(str).str.strip() == ""
+        (df["SupportNote"].fillna("").astype(str).str.strip() == "") &
+        (df["Notes"].fillna("").astype(str).str.strip() == "") &
+        (df["QuickNotes"].fillna("").astype(str).str.strip() == "")
     )
     df = df[~mask_blank]
 
@@ -91,19 +91,16 @@ def controlling_tab():
         st.write("Ingen relevante QuickNotes fundet.")
 
     st.subheader("2) Notes-analyse (hvor QuickNotes er tomme eller uden match)")
-    # Tag kun rækker uden QuickNotes-match
     df_no_q = df[~df.index.isin(df_q.index)]
     df_n    = analyze_notes(df_no_q)
 
     if not df_n.empty:
         for cust, grp in df_n.groupby("CustomerName"):
             with st.expander(cust):
-                # Sektion for Matches = Ja
                 df_yes = grp[grp["NotesMatch"] == "Ja"]
                 if not df_yes.empty:
                     st.markdown("**Matches (Ja)**")
                     st.dataframe(df_yes)
-                # Sektion for Matches = Nej
                 df_no = grp[grp["NotesMatch"] == "Nej"]
                 if not df_no.empty:
                     st.markdown("**No Matches (Nej)**")
