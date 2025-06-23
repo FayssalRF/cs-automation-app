@@ -3,13 +3,28 @@ import io
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+from openpyxl import load_workbook
 
 # --- Hjælpefunktioner -------------------------------------------------------
 
 @st.cache_data
 def load_revenue_df(uploaded_file) -> pd.DataFrame:
-    """Loader den uploadede Excel-rapport."""
-    return pd.read_excel(uploaded_file, engine="openpyxl")
+    """Loader den uploadede Excel-rapport, og unhider alle skjulte kolonner."""
+    # Sørg for at læse fra starten
+    uploaded_file.seek(0)
+    wb = load_workbook(uploaded_file, data_only=True)
+
+    # Unhide alle kolonner i alle ark
+    for ws in wb.worksheets:
+        for col_dim in ws.column_dimensions.values():
+            col_dim.hidden = False
+
+    # Gem det midlertidigt og læs med pandas
+    tmp = io.BytesIO()
+    wb.save(tmp)
+    tmp.seek(0)
+    df = pd.read_excel(tmp, engine="openpyxl")
+    return df
 
 def download_df(df: pd.DataFrame, label: str, file_name: str) -> None:
     """Pak en DataFrame til en Streamlit-download-knap."""
@@ -31,34 +46,33 @@ def revenue_tab():
     uploaded = st.file_uploader("1) Upload din Revenue-rapport (.xlsx)", type=["xlsx"])
     if not uploaded:
         return
+
     df = load_revenue_df(uploaded)
 
     # Find årskolonner 2016–2024 og total-2025
-    year_cols = [str(y) for y in range(2016, 2025)]
-    year_cols = [c for c in year_cols if c in df.columns]
+    year_cols = [str(y) for y in range(2016, 2025) if str(y) in df.columns]
     total_2025 = "2025"
     if total_2025 not in df.columns:
         st.error(f"Kolonnen '{total_2025}' (2025-total) mangler i din fil.")
         return
 
-    # Filter: alle 2016–2024 skal være 0, men 2025 total > 0
-    mask_zero_years = (df[year_cols] == 0).all(axis=1)
-    mask_positive_2025 = pd.to_numeric(df[total_2025], errors="coerce").fillna(0) > 0
+    # Filter: 2016–2024 SKAL være 0, 2025 > 0
+    mask_zero_years     = (df[year_cols] == 0).all(axis=1)
+    mask_positive_2025  = pd.to_numeric(df[total_2025], errors="coerce").fillna(0) > 0
     df_new = df[mask_zero_years & mask_positive_2025].copy()
 
-    st.subheader(f"Fundet {len(df_new)} nye kunder (kun 2025-omsætning)")
+    st.subheader(f"Fundet {len(df_new)} nye kunder (kun omsætning i 2025)")
     if df_new.empty:
         st.info("Ingen nye kunder efter kriteriet.")
         return
 
-    # Vis kort oversigt
-    preview_cols = ["Company Name", "Name", "ID", total_2025]
-    preview_cols = [c for c in preview_cols if c in df_new.columns]
-    st.dataframe(df_new[preview_cols])
+    # Kort preview
+    preview = ["Company Name", "Name", "ID", total_2025]
+    preview = [c for c in preview if c in df_new.columns]
+    st.dataframe(df_new[preview])
 
-    # Trin 2: Angiv estimeret årlig omsætning for hver kunde
+    # Trin 2: Angiv estimeret årlig omsætning
     st.subheader("2) Angiv estimeret årlig omsætning")
-    st.write("Indtast for hver kunde. Tryk på 'Analyser' når du er færdig.")
     with st.form("estimation_form"):
         potentials = {}
         for idx, row in df_new.iterrows():
@@ -76,7 +90,7 @@ def revenue_tab():
     if not do_analyze:
         return
 
-    # Beregn succes-flag
+    # Beregn onboard-success
     df_new["EstPotential"]   = df_new.index.to_series().map(potentials)
     df_new["OnboardSuccess"] = df_new[total_2025] >= 0.1 * df_new["EstPotential"]
 
