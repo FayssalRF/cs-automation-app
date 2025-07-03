@@ -15,11 +15,15 @@ if not st.session_state.authenticated:
     st.title("Login")
     password = st.text_input("Enter password", type="password")
     if st.button("Login"):
-        if password == "CSmover123":
+        # Sikker sammenligning med adgangskoden fra Streamlit Secrets
+        if "APP_PASSWORD" in st.secrets and password == st.secrets["APP_PASSWORD"]:
             st.session_state.authenticated = True
             st.success("Password correct!")
+            # st.rerun() er god praksis for at genindlæse siden efter login
+            st.rerun()
         else:
             st.error("Incorrect password!")
+    # Stop med at køre resten af app'en, indtil man er logget ind
     st.stop()
 
 # --- Page config & global CSS styling ---
