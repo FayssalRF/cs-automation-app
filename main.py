@@ -70,7 +70,7 @@ st.markdown(
         border-radius: 999px;
         font-size: 14px;
         font-weight: 600;
-        background-color: #4AA8FF !important;   /* Lyseblå */
+        background-color: #D7F3F9 !important;   /* Lyseblå */
         color: #FFFFFF !important;
         border: none;
         padding: 8px 22px;
@@ -279,4 +279,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
