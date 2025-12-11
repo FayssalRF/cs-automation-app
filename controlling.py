@@ -65,7 +65,7 @@ def analyze_quicknotes(df: pd.DataFrame) -> pd.DataFrame:
         lambda txt: any(p.lower() in txt for p in patterns)
     )
 
-    # Behold også EstDuration, Price og ActPrice til tabellen
+    # Behold kolonnerne til tabellen
     return out[out["QuickNotesMatch"]][
         [
             "SessionId",
@@ -75,7 +75,7 @@ def analyze_quicknotes(df: pd.DataFrame) -> pd.DataFrame:
             "ActDuration",
             "Price",
             "ActPrice",
-            "QuickNotes",  # beholdes til download/videre analyse
+            "QuickNotes",
         ]
     ]
 
@@ -171,6 +171,7 @@ def controlling_tab():
         "ActDuration",
         "Price",
         "ActPrice",
+        "QuickNotes",   # <- TILFØJET IGEN
     ]
 
     for cust, grp in sorted(df_q.groupby("CustomerName"), key=lambda x: x[0]):
@@ -194,7 +195,7 @@ def controlling_tab():
             unsafe_allow_html=True,
         )
 
-    # Download-knap til hele analysen (med alle kolonner inkl. QuickNotes)
+    # Download-knap til hele analysen
     download_df(
         df_q,
         "Download QuickNotes-analyse",
