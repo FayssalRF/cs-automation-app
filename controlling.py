@@ -39,10 +39,7 @@ def filter_by_realized_time(df: pd.DataFrame) -> pd.DataFrame:
     # Sikre CustomerName som str
     cust_name = out["CustomerName"].fillna("").astype(str)
 
-    # Mask for Brød Cooperativet
     is_brod = cust_name == "Brød Cooperativet"
-
-    # Krav:
     brod_ok = is_brod & (out[duration_col] >= 150)
     other_ok = ~is_brod & (out[duration_col] >= 180)
 
@@ -75,7 +72,12 @@ def analyze_quicknotes(df: pd.DataFrame) -> pd.DataFrame:
 # --- Streamlit-faneblad -----------------------------------------------------
 
 def controlling_tab():
-    st.header("Controlling-analyse – QuickNotes (Solutions)")
+    st.header("Controlling-analyse – QuickNotes (Solutions deviations)")
+
+    st.caption(
+        "Fokuserer på ruter med ekstra tid eller kundedeviationer baseret på "
+        "QuickNotes og filtrerer samtidig korte ruter fra."
+    )
 
     # Auto-beregn sidste ISO-uge
     today = date.today()
@@ -86,21 +88,23 @@ def controlling_tab():
         "https://moverdatawarehouse.azurewebsites.net/download/DurationControlling"
         f"?apikey=2d633b&Userid=74859&Yearweek={yearweek}"
     )
-    st.markdown(
-        f"[Download controlling-rapport for sidste uge (ISO uge {iso_week})]({link})"
-    )
+
+    with st.container():
+        st.markdown(
+            f"[Download controlling-rapport for sidste uge (ISO uge {iso_week})]({link})"
+        )
+
+    st.markdown("---")
 
     # Upload
-    uploaded = st.file_uploader("Upload din controlling-rapport (.xlsx)", type=["xlsx"])
+    uploaded = st.file_uploader("Upload din DurationControlling-rapport (.xlsx)", type=["xlsx"])
     if not uploaded:
         return
 
     df = pd.read_excel(uploaded)
 
-    # --- ROBUST FRASORTERING AF IKEA-KUNDER ----------------------------------
+    # Robust frasortering af udvalgte IKEA-kunder
     exclude_customers_raw = ["IKEA Norway", "IKEA BE", "IKEA NL"]
-
-    # Normaliser CustomerName → fjern whitespace & gør lowercase
     df["CustomerName_clean"] = (
         df["CustomerName"]
         .fillna("")
@@ -108,15 +112,9 @@ def controlling_tab():
         .str.strip()
         .str.lower()
     )
-
     exclude_customers = [name.lower() for name in exclude_customers_raw]
-
     df = df[~df["CustomerName_clean"].isin(exclude_customers)].copy()
-
-    # Fjern hjælpekolonnen
     df.drop(columns=["CustomerName_clean"], inplace=True)
-
-    # -------------------------------------------------------------------------
 
     # Frasortér ruter ud fra realiseret tid (ActDuration)
     df = filter_by_realized_time(df)
@@ -133,26 +131,28 @@ def controlling_tab():
         st.warning("Ingen ruter med QuickNotes-tekst tilbage efter filtrering.")
         return
 
-    # --- QuickNotes-analyse --------------------------------------------------
-    st.subheader("QuickNotes-analyse – Solutions deviations")
+    # QuickNotes-analyse
+    st.subheader("Resultat")
+
     df_q = analyze_quicknotes(df)
 
     if df_q.empty:
         st.write("Ingen ruter med de valgte QuickNotes efter alle filtreringer.")
-    else:
-        st.write(f"Antal ruter efter tids- og QuickNotes-filtrering: **{len(df_q)}**")
+        return
 
-        # Vis pr. kunde
-        for cust, grp in df_q.groupby("CustomerName"):
-            with st.expander(cust):
-                st.dataframe(grp)
+    st.write(f"Antal ruter efter tids- og QuickNotes-filtrering: **{len(df_q)}**")
 
-        # Download-knap
-        download_df(
-            df_q,
-            "Download QuickNotes-analyse",
-            "quicknotes_solutions_analyse.xlsx",
-        )
+    # Vis pr. kunde i expander – det passer godt med “kort”/sektioner
+    for cust, grp in df_q.groupby("CustomerName"):
+        with st.expander(cust):
+            st.dataframe(grp, use_container_width=True)
+
+    # Download-knap
+    download_df(
+        df_q,
+        "Download QuickNotes-analyse",
+        "quicknotes_solutions_analyse.xlsx",
+    )
 
 if __name__ == "__main__":
     st.set_page_config(page_title="CS Automation – Controlling")
