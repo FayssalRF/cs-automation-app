@@ -97,7 +97,9 @@ def controlling_tab():
     st.markdown("---")
 
     # Upload
-    uploaded = st.file_uploader("Upload din DurationControlling-rapport (.xlsx)", type=["xlsx"])
+    uploaded = st.file_uploader(
+        "Upload din DurationControlling-rapport (.xlsx)", type=["xlsx"]
+    )
     if not uploaded:
         return
 
@@ -132,22 +134,48 @@ def controlling_tab():
         return
 
     # QuickNotes-analyse
-    st.subheader("Resultat")
-
     df_q = analyze_quicknotes(df)
 
     if df_q.empty:
         st.write("Ingen ruter med de valgte QuickNotes efter alle filtreringer.")
         return
 
+    st.subheader("Resultat")
     st.write(f"Antal ruter efter tids- og QuickNotes-filtrering: **{len(df_q)}**")
 
-    # Vis pr. kunde i expander – det passer godt med “kort”/sektioner
-    for cust, grp in df_q.groupby("CustomerName"):
-        with st.expander(cust):
-            st.dataframe(grp, use_container_width=True)
+    # --- Apple-lignende kort pr. kunde --------------------------------------
+    st.markdown(
+        """
+        <p style="color:#4A6275; font-size:0.95em; margin-bottom: 16px;">
+          Hver boks nedenfor viser ruter for en kunde, der matcher de valgte kriterier.
+        </p>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    # Download-knap
+    # Sortér kunder alfabetisk for pænere visning
+    for cust, grp in sorted(df_q.groupby("CustomerName"), key=lambda x: x[0]):
+        # Konverter data til HTML-tabel
+        table_html = grp.to_html(index=False)
+
+        st.markdown(
+            f"""
+            <div class="card" style="margin-bottom: 18px;">
+              <div style="font-size:1.05em; font-weight:600; margin-bottom:4px;">
+                {cust}
+              </div>
+              <div style="font-size:0.85em; color:#4A6275; margin-bottom:10px;">
+                Antal ruter: {len(grp)}
+              </div>
+              <div style="overflow-x:auto;">
+                {table_html}
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # Download-knap til hele analysen
     download_df(
         df_q,
         "Download QuickNotes-analyse",
