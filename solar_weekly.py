@@ -28,5 +28,5 @@ def solar_weekly_tab():
         f"&ToDate={last_sunday:%Y-%m-%d}"
     )
     st.markdown(f"[Download rå rapport]({url})", unsafe_allow_html=True)
-    st.info("Klik for at hente rå .xlsx med alle ruter.")
+    st.info("Klik for at hente Solar RouteStat rapport for sidste uge")
     
