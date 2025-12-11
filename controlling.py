@@ -65,8 +65,18 @@ def analyze_quicknotes(df: pd.DataFrame) -> pd.DataFrame:
         lambda txt: any(p.lower() in txt for p in patterns)
     )
 
+    # Behold også EstDuration, Price og ActPrice til tabellen
     return out[out["QuickNotesMatch"]][
-        ["SessionId", "Date", "CustomerId", "CustomerName", "ActDuration", "QuickNotes"]
+        [
+            "SessionId",
+            "Date",
+            "CustomerName",
+            "EstDuration",
+            "ActDuration",
+            "Price",
+            "ActPrice",
+            "QuickNotes",  # beholdes til download/videre analyse
+        ]
     ]
 
 # --- Streamlit-faneblad -----------------------------------------------------
@@ -143,7 +153,6 @@ def controlling_tab():
     st.subheader("Resultat")
     st.write(f"Antal ruter efter tids- og QuickNotes-filtrering: **{len(df_q)}**")
 
-    # --- Apple-lignende kort pr. kunde --------------------------------------
     st.markdown(
         """
         <p style="color:#4A6275; font-size:0.95em; margin-bottom: 16px;">
@@ -153,10 +162,20 @@ def controlling_tab():
         unsafe_allow_html=True,
     )
 
-    # Sortér kunder alfabetisk for pænere visning
+    # --- Apple-lignende kort pr. kunde --------------------------------------
+    display_cols = [
+        "SessionId",
+        "Date",
+        "CustomerName",
+        "EstDuration",
+        "ActDuration",
+        "Price",
+        "ActPrice",
+    ]
+
     for cust, grp in sorted(df_q.groupby("CustomerName"), key=lambda x: x[0]):
-        # Konverter data til HTML-tabel
-        table_html = grp.to_html(index=False)
+        # Kun de ønskede kolonner i tabellen
+        table_html = grp[display_cols].to_html(index=False)
 
         st.markdown(
             f"""
@@ -175,7 +194,7 @@ def controlling_tab():
             unsafe_allow_html=True,
         )
 
-    # Download-knap til hele analysen
+    # Download-knap til hele analysen (med alle kolonner inkl. QuickNotes)
     download_df(
         df_q,
         "Download QuickNotes-analyse",
