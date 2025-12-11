@@ -108,16 +108,12 @@ st.markdown(
 from forside import forside_tab
 from controlling import controlling_tab
 from solar_weekly import solar_weekly_tab
-from solar_co2 import solar_co2_tab
-from revenue import revenue_tab
 
 # --- Create tab bar ---
 tabs = st.tabs([
     "Forside",
     "Controlling Report Analyzer",
     "Solar Weekly Report",
-    "Solar CO₂ Report",
-    "Revenue analyzer"
 ])
 
 with tabs[0]:
@@ -126,10 +122,6 @@ with tabs[1]:
     controlling_tab()
 with tabs[2]:
     solar_weekly_tab()
-with tabs[3]:
-    solar_co2_tab()
-with tabs[4]:
-    revenue_tab()
 
 # --- Footer ---
 st.markdown(
@@ -140,3 +132,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
