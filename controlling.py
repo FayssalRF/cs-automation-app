@@ -1,5 +1,4 @@
 import io
-import re
 from datetime import date, timedelta
 
 import pandas as pd
@@ -7,12 +6,8 @@ import streamlit as st
 
 # --- Hjælpefunktioner -------------------------------------------------------
 
-@st.cache_data
-def load_keywords(path: str = "keywords.txt") -> list[str]:
-    with open(path, "r", encoding="utf-8") as f:
-        return [line.strip() for line in f if line.strip()]
-
 def download_df(df: pd.DataFrame, label: str, file_name: str) -> None:
+    """Download en DataFrame som Excel-fil via Streamlit."""
     buf = io.BytesIO()
     df.to_excel(buf, index=False, engine="xlsxwriter")
     st.download_button(
@@ -22,55 +17,70 @@ def download_df(df: pd.DataFrame, label: str, file_name: str) -> None:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
-# --- Analysefunktioner -----------------------------------------------------
+def filter_by_realized_time(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Frasortér alle ruter med realiseret tid (ActDuration) under:
+      - 180 minutter (3 timer) for alle kunder
+      - 150 minutter (2,5 time) for 'Brød Cooperativet'
+    """
+
+    duration_col = "ActDuration"
+
+    if duration_col not in df.columns:
+        st.error(
+            f"Kolonnen '{duration_col}' blev ikke fundet i data. "
+            "Tjek at du har uploadet en DurationControlling-rapport."
+        )
+        return df
+
+    out = df.copy()
+    out[duration_col] = pd.to_numeric(out[duration_col], errors="coerce")
+
+    # Sikre CustomerName som str
+    cust_name = out["CustomerName"].fillna("").astype(str)
+
+    # Mask for Brød Cooperativet
+    is_brod = cust_name == "Brød Cooperativet"
+
+    # Krav:
+    # - Brød Cooperativet: >= 150 min
+    # - Alle andre:        >= 180 min
+    brod_ok = is_brod & (out[duration_col] >= 150)
+    other_ok = ~is_brod & (out[duration_col] >= 180)
+
+    filtered = out[brod_ok | other_ok].copy()
+    return filtered
+
+# --- Analysefunktion --------------------------------------------------------
 
 def analyze_quicknotes(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filtrér kun ruter hvor QuickNotes indeholder én af:
+      - "Solutions - Delay - Extra time spent (S)"
+      - "Solutions - Customer deviation"
+    """
     patterns = [
-        "Solutions - Delay",
+        "Solutions - Delay - Extra time spent (S)",
         "Solutions - Customer deviation",
-        "Courier - Extra loading time"
     ]
+
     out = df.copy()
     # Tving altid til str før vi søger
     series = out["QuickNotes"].fillna("").astype(str).str.lower()
+
     out["QuickNotesMatch"] = series.apply(
         lambda txt: any(p.lower() in txt for p in patterns)
     )
+
+    # Returnér kun rækker med match
     return out[out["QuickNotesMatch"]][
-        ["SessionId", "Date", "CustomerId", "CustomerName", "QuickNotes"]
-    ]
-
-def analyze_notes(df: pd.DataFrame, keywords: list[str]) -> pd.DataFrame:
-    pattern = "|".join(re.escape(kw) for kw in keywords)
-    out = df.copy()
-    notes_str = out["Notes"].fillna("").astype(str)
-    out["NotesMatch"]    = notes_str.str.contains(pattern, case=False, regex=True)
-    out["NotesKeywords"] = notes_str.apply(
-        lambda txt: [kw for kw in keywords if kw.lower() in txt.lower()]
-    )
-    return out[
-        ["SessionId", "Date", "CustomerId", "CustomerName", "Notes", "NotesMatch", "NotesKeywords"]
-    ]
-
-def analyze_supportnote(df: pd.DataFrame, keywords: list[str]) -> pd.DataFrame:
-    pattern = "|".join(re.escape(kw) for kw in keywords)
-    out = df.copy()
-    sup_str = out["SupportNote"].fillna("").astype(str)
-    out["SupportNoteMatch"]    = sup_str.str.contains(pattern, case=False, regex=True)
-    out["SupportNoteKeywords"] = sup_str.apply(
-        lambda txt: [kw for kw in keywords if kw.lower() in txt.lower()]
-    )
-    return out[
-        [
-            "SessionId", "Date", "CustomerId", "CustomerName",
-            "SupportNote", "SupportNoteMatch", "SupportNoteKeywords"
-        ]
+        ["SessionId", "Date", "CustomerId", "CustomerName", "ActDuration", "QuickNotes"]
     ]
 
 # --- Streamlit-faneblad -----------------------------------------------------
 
 def controlling_tab():
-    st.header("Controlling-analyse")
+    st.header("Controlling-analyse – QuickNotes (Solutions)")
 
     # Auto-beregn sidste ISO-uge
     today = date.today()
@@ -89,59 +99,49 @@ def controlling_tab():
     uploaded = st.file_uploader("Upload din controlling-rapport (.xlsx)", type=["xlsx"])
     if not uploaded:
         return
+
     df = pd.read_excel(uploaded)
 
-    # Ekskluder IKEA NL
-    df = df[df["CustomerName"].fillna("") != "IKEA NL"].copy()
+    # Ekskluder udvalgte IKEA-kunder
+    exclude_customers = ["IKEA Norway", "IKEA BE", "IKEA NL"]
+    df = df[~df["CustomerName"].fillna("").isin(exclude_customers)].copy()
 
-    # Fjern rækker uden tekst i alle tre felter
-    sup_blank  = df["SupportNote"].fillna("").astype(str).str.strip() == ""
-    notes_blank= df["Notes"].fillna("").astype(str).str.strip() == ""
-    quick_blank= df["QuickNotes"].fillna("").astype(str).str.strip() == ""
-    df = df[~(sup_blank & notes_blank & quick_blank)].copy()
+    # Frasortér ruter ud fra realiseret tid (ActDuration)
+    df = filter_by_realized_time(df)
 
-    # Load keywords
-    keywords = load_keywords()
+    if df.empty:
+        st.warning("Ingen ruter opfylder kravet til minimum realiseret tid efter filtrering.")
+        return
 
-    # 1) QuickNotes-analyse
-    st.subheader("1) QuickNotes-analyse")
+    # Fjern rækker uden QuickNotes-tekst
+    quick_str = df["QuickNotes"].fillna("").astype(str)
+    df = df[quick_str.str.strip() != ""].copy()
+
+    if df.empty:
+        st.warning("Ingen ruter med QuickNotes-tekst tilbage efter filtrering.")
+        return
+
+    # QuickNotes-analyse (kun de to ønskede typer)
+    st.subheader("QuickNotes-analyse – Solutions deviations")
     df_q = analyze_quicknotes(df)
-    if not df_q.empty:
+
+    if df_q.empty:
+        st.write("Ingen ruter med de valgte QuickNotes efter alle filtreringer.")
+    else:
+        # Lille statistik
+        st.write(f"Antal ruter efter tids- og QuickNotes-filtrering: **{len(df_q)}**")
+
+        # Vis pr. kunde
         for cust, grp in df_q.groupby("CustomerName"):
             with st.expander(cust):
                 st.dataframe(grp)
-    else:
-        st.write("Ingen relevante QuickNotes fundet.")
 
-    # 2) Notes-analyse
-    st.subheader("2) Notes-analyse")
-    df_no_q = df.loc[~df.index.isin(df_q.index)]
-    df_n    = analyze_notes(df_no_q, keywords)
-    if not df_n.empty:
-        for cust, grp in df_n.groupby("CustomerName"):
-            with st.expander(cust):
-                df_yes = grp[grp["NotesMatch"]]
-                df_no  = grp[~grp["NotesMatch"]]
-                if not df_yes.empty:
-                    st.markdown("**Matches (Ja)**")
-                    st.dataframe(df_yes)
-                if not df_no.empty:
-                    st.markdown("**No Matches (Nej)**")
-                    st.dataframe(df_no)
-    else:
-        st.write("Ingen Notes-matches fundet.")
-
-    # Download hovedanalyse
-    main_df = pd.concat([df_q, df_n], ignore_index=True)
-    download_df(main_df, "Download hovedanalyse (QuickNotes + Notes)", "controlling_hovedanalyse.xlsx")
-
-    # SupportNote-analyse i separat expander
-    with st.expander("SupportNote-analyse"):
-        df_s = analyze_supportnote(df, keywords)
-        for cust, grp in df_s.groupby("CustomerName"):
-            with st.expander(cust):
-                st.dataframe(grp)
-        download_df(df_s, "Download SupportNote-analyse", "supportnote_analyse.xlsx")
+        # Download-knap
+        download_df(
+            df_q,
+            "Download QuickNotes-analyse",
+            "quicknotes_solutions_analyse.xlsx",
+        )
 
 if __name__ == "__main__":
     st.set_page_config(page_title="CS Automation – Controlling")
