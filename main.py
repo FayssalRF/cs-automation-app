@@ -166,7 +166,7 @@ if "page" not in st.session_state:
 
 def go(page_key: str):
     st.session_state.page = page_key
-    st.experimental_rerun()
+    st.rerun()
 
 # --- Layout: Dashboard + sider ----------------------------------------------
 
@@ -279,5 +279,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
