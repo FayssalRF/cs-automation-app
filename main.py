@@ -34,7 +34,6 @@ st.markdown(
     """
     <!-- Import Open Sans and Material Icons from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons:outlined" rel="stylesheet">
 
     <style>
       body, .main, p, li, .stMarkdown {
@@ -65,7 +64,7 @@ st.markdown(
         color: #33566C;
       }
 
-      /* Knapper */
+      /* Standard knapper (tilbage, mv.) */
       .stButton > button {
         border-radius: 999px;
         font-size: 14px;
@@ -81,49 +80,46 @@ st.markdown(
         background-color: #003F63;
       }
 
-      /* Sekundær knap (tilbage) */
-      .secondary-btn > button {
+      /* Tilbage-knap / sekundær knap */
+      .secondary-btn .stButton > button {
         background-color: #FFFFFF !important;
         color: #01293D !important;
         border: 1px solid #D0D7DE !important;
         box-shadow: none !important;
       }
 
-      /* Dashboard cards */
-      .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 24px;
+      /* Dashboard layout */
+      .dashboard-wrapper {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      /* Card-knapper */
+      .card-list {
         margin-top: 10px;
       }
-      .card {
+      .card-btn .stButton > button {
+        width: 100%;
+        text-align: left;
+        border-radius: 24px;
+        padding: 18px 24px;
         background: #FFFFFF;
-        border-radius: 22px;
-        padding: 20px 20px 16px 20px;
-        box-shadow: 0 18px 40px rgba(1,41,61,0.06);
         border: 1px solid #E5E9F0;
-        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-      }
-      .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 24px 60px rgba(1,41,61,0.09);
-        border-color: #D0D7DE;
-      }
-      .card-icon {
-        font-family: 'Material Icons', 'Material Icons Outlined';
-        font-size: 26px;
+        box-shadow: 0 18px 40px rgba(1,41,61,0.06);
         color: #01293D;
-        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 15px;
+        white-space: pre-wrap; /* bevar linjeskift i label */
       }
-      .card-title {
-        font-size: 1.1em;
-        font-weight: 600;
-        margin-bottom: 4px;
+      .card-btn .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 24px 60px rgba(1,41,61,0.10);
+        border-color: #D0D7DE;
+        background: #FDFEFE;
       }
-      .card-body {
-        font-size: 0.95em;
-        color: #355067;
-        margin-bottom: 12px;
+
+      .card-spacer {
+        height: 14px;
       }
 
       .footer {
@@ -168,80 +164,67 @@ def go(page_key: str):
 # --- Layout: Dashboard + sider ----------------------------------------------
 
 if st.session_state.page == "dashboard":
-    # Apple-agtigt dashboard med cards
-    st.markdown("### Dashboard")
+    st.markdown('<div class="dashboard-wrapper">', unsafe_allow_html=True)
 
+    st.markdown("### Dashboard")
     st.markdown(
         """
-        <p style="color:#4A6275; font-size:0.95em; margin-bottom: 20px;">
+        <p style="color:#4A6275; font-size:0.95em; margin-bottom: 18px;">
           Vælg et værktøj nedenfor for at komme hurtigt i gang.
         </p>
         """,
         unsafe_allow_html=True,
     )
 
-    st.markdown('<div class="dashboard-grid">', unsafe_allow_html=True)
+    st.markdown('<div class="card-list">', unsafe_allow_html=True)
 
     # Card 1 – Controlling
-    st.markdown(
-        """
-        <div class="card">
-          <div class="card-icon">insights</div>
-          <div class="card-title">Controlling Report Analyzer</div>
-          <div class="card-body">
-            Få automatisk overblik over ruter med ekstra tid og kundedeviation
-            baseret på QuickNotes.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    if st.button("Åbn Controlling", key="open_controlling"):
-        go("controlling")
+    with st.container():
+        st.markdown('<div class="card-btn">', unsafe_allow_html=True)
+        label = (
+            "📊  Controlling Report Analyzer\n"
+            "Få automatisk overblik over ruter med ekstra tid og kundedeviation baseret på QuickNotes."
+        )
+        if st.button(label, key="card_controlling", use_container_width=True):
+            go("controlling")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="card-spacer"></div>', unsafe_allow_html=True)
 
     # Card 2 – Solar Weekly
-    st.markdown(
-        """
-        <div class="card">
-          <div class="card-icon">calendar_month</div>
-          <div class="card-title">Solar Weekly Report</div>
-          <div class="card-body">
-            Upload ugens Solar-rapport og få et hurtigt overblik over performance
-            og nøgletal.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    if st.button("Åbn Solar Weekly", key="open_solar_weekly"):
-        go("solar_weekly")
+    with st.container():
+        st.markdown('<div class="card-btn">', unsafe_allow_html=True)
+        label = (
+            "📅  Solar Weekly Report\n"
+            "Upload ugens Solar-rapport og få et hurtigt overblik over performance og nøgletal."
+        )
+        if st.button(label, key="card_solar_weekly", use_container_width=True):
+            go("solar_weekly")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="card-spacer"></div>', unsafe_allow_html=True)
 
     # Card 3 – Forside / overblik
-    st.markdown(
-        """
-        <div class="card">
-          <div class="card-icon">dashboard</div>
-          <div class="card-title">Overblik &amp; noter</div>
-          <div class="card-body">
-            Se forside-visningen med generelt overblik, noter eller andre
-            værktøjer du har lagt her.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    if st.button("Åbn overblik", key="open_forside"):
-        go("forside")
+    with st.container():
+        st.markdown('<div class="card-btn">', unsafe_allow_html=True)
+        label = (
+            "📋  Overblik & noter\n"
+            "Se forside-visningen med generelt overblik, noter eller andre værktøjer du har lagt her."
+        )
+        if st.button(label, key="card_forside", use_container_width=True):
+            go("forside")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)  # card-list
+    st.markdown('</div>', unsafe_allow_html=True)  # dashboard-wrapper
 
 elif st.session_state.page == "controlling":
-    # Tilbage-knap
     col_back, _ = st.columns([1, 4])
     with col_back:
-        back = st.button("← Tilbage til dashboard", key="back_from_controlling")
-        if back:
+        st.markdown('<div class="secondary-btn">', unsafe_allow_html=True)
+        if st.button("← Tilbage til dashboard", key="back_from_controlling"):
             go("dashboard")
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     controlling_tab()
@@ -249,9 +232,10 @@ elif st.session_state.page == "controlling":
 elif st.session_state.page == "solar_weekly":
     col_back, _ = st.columns([1, 4])
     with col_back:
-        back = st.button("← Tilbage til dashboard", key="back_from_solar")
-        if back:
+        st.markdown('<div class="secondary-btn">', unsafe_allow_html=True)
+        if st.button("← Tilbage til dashboard", key="back_from_solar"):
             go("dashboard")
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     solar_weekly_tab()
@@ -259,9 +243,10 @@ elif st.session_state.page == "solar_weekly":
 elif st.session_state.page == "forside":
     col_back, _ = st.columns([1, 4])
     with col_back:
-        back = st.button("← Tilbage til dashboard", key="back_from_forside")
-        if back:
+        st.markdown('<div class="secondary-btn">', unsafe_allow_html=True)
+        if st.button("← Tilbage til dashboard", key="back_from_forside"):
             go("dashboard")
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     forside_tab()
