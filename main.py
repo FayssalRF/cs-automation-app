@@ -65,21 +65,24 @@ st.markdown(
         color: #33566C;
       }
 
-      /* Knapper */
-      .stButton > button {
+        /* Primære knapper (lyseblå Apple-style) */
+        .stButton > button {
         border-radius: 999px;
         font-size: 14px;
         font-weight: 600;
-        background-color: #01293D;
-        color: #FFFFFF;
+        background-color: #4AA8FF !important;   /* Lyseblå */
+        color: #FFFFFF !important;
         border: none;
         padding: 8px 22px;
         cursor: pointer;
         box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-      }
-      .stButton > button:hover {
-        background-color: #003F63;
-      }
+        transition: background-color 0.2s ease;
+        }
+        
+        .stButton > button:hover {
+            background-color: #2496FF !important;   /* Lidt mørkere lyseblå */
+        }
+
 
       /* Sekundær knap (tilbage) */
       .secondary-btn > button {
@@ -276,3 +279,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
