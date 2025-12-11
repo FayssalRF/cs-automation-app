@@ -43,13 +43,10 @@ def filter_by_realized_time(df: pd.DataFrame) -> pd.DataFrame:
     is_brod = cust_name == "Brød Cooperativet"
 
     # Krav:
-    # - Brød Cooperativet: >= 150 min
-    # - Alle andre:        >= 180 min
     brod_ok = is_brod & (out[duration_col] >= 150)
     other_ok = ~is_brod & (out[duration_col] >= 180)
 
-    filtered = out[brod_ok | other_ok].copy()
-    return filtered
+    return out[brod_ok | other_ok].copy()
 
 # --- Analysefunktion --------------------------------------------------------
 
@@ -65,14 +62,12 @@ def analyze_quicknotes(df: pd.DataFrame) -> pd.DataFrame:
     ]
 
     out = df.copy()
-    # Tving altid til str før vi søger
     series = out["QuickNotes"].fillna("").astype(str).str.lower()
 
     out["QuickNotesMatch"] = series.apply(
         lambda txt: any(p.lower() in txt for p in patterns)
     )
 
-    # Returnér kun rækker med match
     return out[out["QuickNotesMatch"]][
         ["SessionId", "Date", "CustomerId", "CustomerName", "ActDuration", "QuickNotes"]
     ]
@@ -102,9 +97,26 @@ def controlling_tab():
 
     df = pd.read_excel(uploaded)
 
-    # Ekskluder udvalgte IKEA-kunder
-    exclude_customers = ["IKEA Norway", "IKEA BE", "IKEA NL"]
-    df = df[~df["CustomerName"].fillna("").isin(exclude_customers)].copy()
+    # --- ROBUST FRASORTERING AF IKEA-KUNDER ----------------------------------
+    exclude_customers_raw = ["IKEA Norway", "IKEA BE", "IKEA NL"]
+
+    # Normaliser CustomerName → fjern whitespace & gør lowercase
+    df["CustomerName_clean"] = (
+        df["CustomerName"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.lower()
+    )
+
+    exclude_customers = [name.lower() for name in exclude_customers_raw]
+
+    df = df[~df["CustomerName_clean"].isin(exclude_customers)].copy()
+
+    # Fjern hjælpekolonnen
+    df.drop(columns=["CustomerName_clean"], inplace=True)
+
+    # -------------------------------------------------------------------------
 
     # Frasortér ruter ud fra realiseret tid (ActDuration)
     df = filter_by_realized_time(df)
@@ -121,14 +133,13 @@ def controlling_tab():
         st.warning("Ingen ruter med QuickNotes-tekst tilbage efter filtrering.")
         return
 
-    # QuickNotes-analyse (kun de to ønskede typer)
+    # --- QuickNotes-analyse --------------------------------------------------
     st.subheader("QuickNotes-analyse – Solutions deviations")
     df_q = analyze_quicknotes(df)
 
     if df_q.empty:
         st.write("Ingen ruter med de valgte QuickNotes efter alle filtreringer.")
     else:
-        # Lille statistik
         st.write(f"Antal ruter efter tids- og QuickNotes-filtrering: **{len(df_q)}**")
 
         # Vis pr. kunde
