@@ -59,7 +59,7 @@ st.markdown(
         border-radius: 999px;
         font-size: 14px;
         font-weight: 600;
-        background-color: #4AA8FF !important;
+        background-color: #D7F3F9 !important;
         color: #FFFFFF !important;
         border: none;
         padding: 8px 22px;
@@ -75,7 +75,7 @@ st.markdown(
       .secondary-btn .stButton > button {
         background-color: #FFFFFF !important;
         color: #4AA8FF !important;
-        border: 2px solid #4AA8FF !important;
+        border: 2px solid #EFFAFD !important;
         box-shadow: none !important;
       }
       .secondary-btn .stButton > button:hover {
@@ -265,3 +265,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
