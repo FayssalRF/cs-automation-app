@@ -104,10 +104,12 @@ st.markdown(
       }
       .card-icon {
         font-family: 'Material Icons Outlined';
-        font-size: 26px;
+        font-size: 28px;
         color: #01293D;
         margin-bottom: 8px;
-      }
+        line-height: 1;
+        }
+
       .card-title {
         font-size: 1.1em;
         font-weight: 700;
@@ -265,4 +267,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
