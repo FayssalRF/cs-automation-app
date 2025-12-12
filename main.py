@@ -54,32 +54,33 @@ st.markdown(
       .header img { max-width: 260px; }
       .header-subtitle { margin-top: 4px; font-size: 1.1em; color: #33566C; }
 
-      /* Buttons (lyseblå) */
+      /* Buttons (light blue) */
       .stButton > button {
         border-radius: 999px;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
         background-color: #D7F3F9 !important;
-        color: #FFFFFF !important;
-        border: none;
+        color: #01293D !important;
+        border: 1px solid #BFE7F1 !important;
         padding: 8px 22px;
         cursor: pointer;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        transition: background-color 0.2s ease;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+        transition: background-color 0.2s ease, border-color 0.2s ease;
       }
       .stButton > button:hover {
-        background-color: #2496FF !important;
+        background-color: #C6EDF6 !important;
+        border-color: #AEE0EC !important;
       }
 
       /* Secondary button wrapper */
       .secondary-btn .stButton > button {
         background-color: #FFFFFF !important;
-        color: #4AA8FF !important;
-        border: 2px solid #EFFAFD !important;
+        color: #01293D !important;
+        border: 1px solid #D0D7DE !important;
         box-shadow: none !important;
       }
       .secondary-btn .stButton > button:hover {
-        background-color: #EAF6FF !important;
+        background-color: #F5F7FA !important;
       }
 
       /* Dashboard cards */
@@ -102,13 +103,14 @@ st.markdown(
         box-shadow: 0 24px 60px rgba(1,41,61,0.09);
         border-color: #D0D7DE;
       }
+
+      /* Material icon inside cards (must use the span class) */
       .card-icon {
-        font-family: 'Material Icons Outlined';
         font-size: 28px;
         color: #01293D;
         margin-bottom: 8px;
         line-height: 1;
-        }
+      }
 
       .card-title {
         font-size: 1.1em;
@@ -173,15 +175,13 @@ if st.session_state.page == "dashboard":
         unsafe_allow_html=True,
     )
 
-    # Cards (visual) + separate button (funktionelt)
-    # Beholder dit card-look præcis som før
     st.markdown('<div class="dashboard-grid">', unsafe_allow_html=True)
 
     # 1) Controlling
     st.markdown(
         """
         <div class="card">
-          <div class="card-icon">insights</div>
+          <span class="material-icons-outlined card-icon">insights</span>
           <div class="card-title">Controlling Report Analyzer</div>
           <div class="card-body">
             Overblik over ruter med ekstra tid og kundedeviation baseret på QuickNotes.
@@ -197,7 +197,7 @@ if st.session_state.page == "dashboard":
     st.markdown(
         """
         <div class="card">
-          <div class="card-icon">calendar_month</div>
+          <span class="material-icons-outlined card-icon">calendar_month</span>
           <div class="card-title">Solar Weekly Report</div>
           <div class="card-body">
             Upload ugens Solar-rapport og få et hurtigt overblik over performance og nøgletal.
@@ -213,7 +213,7 @@ if st.session_state.page == "dashboard":
     st.markdown(
         """
         <div class="card">
-          <div class="card-icon">sticky_note_2</div>
+          <span class="material-icons-outlined card-icon">sticky_note_2</span>
           <div class="card-title">Overblik &amp; noter</div>
           <div class="card-body">
             Skriv noter, instrukser og hjælpeartikler til teamet. Kan eksporteres/importeres som JSON.
@@ -234,6 +234,7 @@ elif st.session_state.page == "controlling":
         if st.button("← Tilbage til dashboard", key="back_from_controlling"):
             go("dashboard")
         st.markdown("</div>", unsafe_allow_html=True)
+
     st.markdown("---")
     controlling_tab()
 
@@ -244,6 +245,7 @@ elif st.session_state.page == "solar_weekly":
         if st.button("← Tilbage til dashboard", key="back_from_solar"):
             go("dashboard")
         st.markdown("</div>", unsafe_allow_html=True)
+
     st.markdown("---")
     solar_weekly_tab()
 
@@ -254,6 +256,7 @@ elif st.session_state.page == "overviewnotes":
         if st.button("← Tilbage til dashboard", key="back_from_overviewnotes"):
             go("dashboard")
         st.markdown("</div>", unsafe_allow_html=True)
+
     st.markdown("---")
     overviewnotes_tab()
 
@@ -267,5 +270,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-
