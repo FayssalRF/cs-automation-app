@@ -3,8 +3,55 @@ from datetime import date, timedelta
 
 import pandas as pd
 import streamlit as st
+import json
+import os
+from datetime import datetime
+
 
 # --- Hjælpefunktioner -------------------------------------------------------
+
+LOG_PATH = "data/controlling_weekly_log.json"
+
+def _ensure_log_dir():
+    os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+
+def read_weekly_log() -> dict:
+    _ensure_log_dir()
+    if not os.path.exists(LOG_PATH):
+        return {}
+    try:
+        with open(LOG_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+def write_weekly_log(data: dict) -> None:
+    _ensure_log_dir()
+    tmp_path = LOG_PATH + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp_path, LOG_PATH)
+
+def detect_yearweek_from_dates(df: pd.DataFrame) -> str | None:
+    if "Date" not in df.columns:
+        return None
+    s = pd.to_datetime(df["Date"], errors="coerce")
+    s = s.dropna()
+    if s.empty:
+        return None
+    iso = s.dt.isocalendar()
+    yearweek = (iso["year"].astype(str) + iso["week"].astype(int).map(lambda w: f"{w:02d}"))
+    # brug mest almindelige uge i filen
+    return yearweek.value_counts().index[0]
+
+def log_controlling_count(yearweek: str, count: int) -> None:
+    log = read_weekly_log()
+    log[str(yearweek)] = {
+        "count": int(count),
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    write_weekly_log(log)
 
 def download_df(df: pd.DataFrame, label: str, file_name: str) -> None:
     """Download en DataFrame som Excel-fil via Streamlit."""
