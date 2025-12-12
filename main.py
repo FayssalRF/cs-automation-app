@@ -11,7 +11,6 @@ if not st.session_state.authenticated:
     st.title("Login")
     password = st.text_input("Enter password", type="password")
     if st.button("Login"):
-        # Sikker sammenligning med adgangskoden fra Streamlit Secrets
         if "APP_PASSWORD" in st.secrets and password == st.secrets["APP_PASSWORD"]:
             st.session_state.authenticated = True
             st.session_state.page = "dashboard"
@@ -19,7 +18,6 @@ if not st.session_state.authenticated:
             st.rerun()
         else:
             st.error("Incorrect password!")
-    # Stop med at køre resten af app'en, indtil man er logget ind
     st.stop()
 
 # --- Page config & global CSS styling ---------------------------------------
@@ -52,44 +50,36 @@ st.markdown(
       h2 { font-size: 2em; color: #003F63; }
       h3 { font-size: 1.5em; color: #01293D; }
 
-      .header {
-        text-align: center;
-        padding: 10px 0 30px 0;
-      }
-      .header img {
-        max-width: 260px;
-      }
-      .header-subtitle {
-        margin-top: 4px;
-        font-size: 1.1em;
-        color: #33566C;
-      }
+      .header { text-align: center; padding: 10px 0 30px 0; }
+      .header img { max-width: 260px; }
+      .header-subtitle { margin-top: 4px; font-size: 1.1em; color: #33566C; }
 
-        /* Primære knapper (lyseblå Apple-style) */
-        .stButton > button {
+      /* Buttons (lyseblå) */
+      .stButton > button {
         border-radius: 999px;
         font-size: 14px;
         font-weight: 600;
-        background-color: #D7F3F9 !important;   /* Lyseblå */
+        background-color: #4AA8FF !important;
         color: #FFFFFF !important;
         border: none;
         padding: 8px 22px;
         cursor: pointer;
         box-shadow: 0 10px 20px rgba(0,0,0,0.08);
         transition: background-color 0.2s ease;
-        }
-        
-        .stButton > button:hover {
-            background-color: #2496FF !important;   /* Lidt mørkere lyseblå */
-        }
+      }
+      .stButton > button:hover {
+        background-color: #2496FF !important;
+      }
 
-
-      /* Sekundær knap (tilbage) */
-      .secondary-btn > button {
+      /* Secondary button wrapper */
+      .secondary-btn .stButton > button {
         background-color: #FFFFFF !important;
-        color: #01293D !important;
-        border: 1px solid #D0D7DE !important;
+        color: #4AA8FF !important;
+        border: 2px solid #4AA8FF !important;
         box-shadow: none !important;
+      }
+      .secondary-btn .stButton > button:hover {
+        background-color: #EAF6FF !important;
       }
 
       /* Dashboard cards */
@@ -113,14 +103,14 @@ st.markdown(
         border-color: #D0D7DE;
       }
       .card-icon {
-        font-family: 'Material Icons', 'Material Icons Outlined';
+        font-family: 'Material Icons Outlined';
         font-size: 26px;
         color: #01293D;
         margin-bottom: 8px;
       }
       .card-title {
         font-size: 1.1em;
-        font-weight: 600;
+        font-weight: 700;
         margin-bottom: 4px;
       }
       .card-body {
@@ -146,7 +136,7 @@ st.markdown(
     """
     <div class="header">
       <img src="https://raw.githubusercontent.com/FayssalRF/cs-automation-app/refs/heads/main/moverLogotype_blue.png"
-           alt="Mover Logo">
+           alt="Mover Logo" style="max-width:300px;">
       <div class="header-subtitle">We are changing logistics for good</div>
     </div>
     """,
@@ -155,11 +145,11 @@ st.markdown(
 
 # --- Import pages -----------------------------------------------------------
 
-from forside import forside_tab
 from controlling import controlling_tab
 from solar_weekly import solar_weekly_tab
+from overviewnotes import overviewnotes_tab
 
-# --- Simple router state ----------------------------------------------------
+# --- Router ----------------------------------------------------------------
 
 if "page" not in st.session_state:
     st.session_state.page = "dashboard"
@@ -168,12 +158,10 @@ def go(page_key: str):
     st.session_state.page = page_key
     st.rerun()
 
-# --- Layout: Dashboard + sider ----------------------------------------------
+# --- Views -----------------------------------------------------------------
 
 if st.session_state.page == "dashboard":
-    # Apple-agtigt dashboard med cards
     st.markdown("### Dashboard")
-
     st.markdown(
         """
         <p style="color:#4A6275; font-size:0.95em; margin-bottom: 20px;">
@@ -183,17 +171,18 @@ if st.session_state.page == "dashboard":
         unsafe_allow_html=True,
     )
 
+    # Cards (visual) + separate button (funktionelt)
+    # Beholder dit card-look præcis som før
     st.markdown('<div class="dashboard-grid">', unsafe_allow_html=True)
 
-    # Card 1 – Controlling
+    # 1) Controlling
     st.markdown(
         """
         <div class="card">
           <div class="card-icon">insights</div>
           <div class="card-title">Controlling Report Analyzer</div>
           <div class="card-body">
-            Få automatisk overblik over ruter med ekstra tid og kundedeviation
-            baseret på QuickNotes.
+            Overblik over ruter med ekstra tid og kundedeviation baseret på QuickNotes.
           </div>
         </div>
         """,
@@ -202,15 +191,14 @@ if st.session_state.page == "dashboard":
     if st.button("Åbn Controlling", key="open_controlling"):
         go("controlling")
 
-    # Card 2 – Solar Weekly
+    # 2) Solar Weekly
     st.markdown(
         """
         <div class="card">
           <div class="card-icon">calendar_month</div>
           <div class="card-title">Solar Weekly Report</div>
           <div class="card-body">
-            Upload ugens Solar-rapport og få et hurtigt overblik over performance
-            og nøgletal.
+            Upload ugens Solar-rapport og få et hurtigt overblik over performance og nøgletal.
           </div>
         </div>
         """,
@@ -219,55 +207,53 @@ if st.session_state.page == "dashboard":
     if st.button("Åbn Solar Weekly", key="open_solar_weekly"):
         go("solar_weekly")
 
-    # Card 3 – Forside / overblik
+    # 3) Overblik & noter
     st.markdown(
         """
         <div class="card">
-          <div class="card-icon">dashboard</div>
+          <div class="card-icon">sticky_note_2</div>
           <div class="card-title">Overblik &amp; noter</div>
           <div class="card-body">
-            Se forside-visningen med generelt overblik, noter eller andre
-            værktøjer du har lagt her.
+            Skriv noter, instrukser og hjælpeartikler til teamet. Kan eksporteres/importeres som JSON.
           </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    if st.button("Åbn overblik", key="open_forside"):
-        go("forside")
+    if st.button("Åbn Overblik & noter", key="open_overviewnotes"):
+        go("overviewnotes")
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "controlling":
-    # Tilbage-knap
     col_back, _ = st.columns([1, 4])
     with col_back:
-        back = st.button("← Tilbage til dashboard", key="back_from_controlling")
-        if back:
+        st.markdown('<div class="secondary-btn">', unsafe_allow_html=True)
+        if st.button("← Tilbage til dashboard", key="back_from_controlling"):
             go("dashboard")
-
+        st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("---")
     controlling_tab()
 
 elif st.session_state.page == "solar_weekly":
     col_back, _ = st.columns([1, 4])
     with col_back:
-        back = st.button("← Tilbage til dashboard", key="back_from_solar")
-        if back:
+        st.markdown('<div class="secondary-btn">', unsafe_allow_html=True)
+        if st.button("← Tilbage til dashboard", key="back_from_solar"):
             go("dashboard")
-
+        st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("---")
     solar_weekly_tab()
 
-elif st.session_state.page == "forside":
+elif st.session_state.page == "overviewnotes":
     col_back, _ = st.columns([1, 4])
     with col_back:
-        back = st.button("← Tilbage til dashboard", key="back_from_forside")
-        if back:
+        st.markdown('<div class="secondary-btn">', unsafe_allow_html=True)
+        if st.button("← Tilbage til dashboard", key="back_from_overviewnotes"):
             go("dashboard")
-
+        st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("---")
-    forside_tab()
+    overviewnotes_tab()
 
 # --- Footer -----------------------------------------------------------------
 
@@ -279,6 +265,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-
-
