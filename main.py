@@ -2,6 +2,59 @@
 
 import streamlit as st
 
+# --- Helpers ---------------------------------------------------------------
+
+def load_css(path: str = "styles.css") -> None:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.warning(f"Kunne ikke finde {path}. Læg styles.css i samme mappe som main.py")
+
+def svg_icon(name: str) -> str:
+    # Simple, clean SVGs (24x24) using currentColor
+    icons = {
+        "insights": """
+        <svg class="card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M8 19V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 19V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M16 19V13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M20 19V9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        """,
+        "calendar": """
+        <svg class="card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7 3V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M17 3V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M4 8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6 5H18C19.1046 5 20 5.89543 20 7V19C20 20.1046 19.1046 21 18 21H6C4.89543 21 4 20.1046 4 19V7C4 5.89543 4.89543 5 6 5Z"
+                stroke="currentColor" stroke-width="2" />
+        </svg>
+        """,
+        "note": """
+        <svg class="card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7 3H15L19 7V21H7V3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M15 3V7H19" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M9 11H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M9 15H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        """
+    }
+    return icons.get(name, "")
+
+def card(title: str, body: str, icon_svg: str) -> None:
+    st.markdown(
+        f"""
+        <div class="card">
+          {icon_svg}
+          <div class="card-title">{title}</div>
+          <div class="card-body">{body}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # --- Authentication ---------------------------------------------------------
 
 if "authenticated" not in st.session_state:
@@ -20,7 +73,7 @@ if not st.session_state.authenticated:
             st.error("Incorrect password!")
     st.stop()
 
-# --- Page config & global CSS styling ---------------------------------------
+# --- Page config & CSS ------------------------------------------------------
 
 st.set_page_config(
     page_title="Mover - Empowering Logistics with Technology",
@@ -28,132 +81,16 @@ st.set_page_config(
     layout="wide"
 )
 
+# Load fonts + CSS
 st.markdown(
     """
-    <!-- Import Open Sans and Material Icons (Outlined) from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons:outlined" rel="stylesheet">
-
-    <style>
-      /* Typography */
-      body, .main, p, li, .stMarkdown {
-        font-family: 'Open Sans', sans-serif;
-        font-size: 15px;
-        font-weight: 400;
-        color: #01293D;
-      }
-      h1, h2, h3, h4 {
-        font-family: 'Open Sans', sans-serif;
-        font-weight: 400;
-        margin-bottom: 10px;
-      }
-      h1 { font-size: 2.4em; color: #01293D; }
-      h2 { font-size: 2em; color: #003F63; }
-      h3 { font-size: 1.5em; color: #01293D; }
-
-      /* Header */
-      .header { text-align: center; padding: 10px 0 30px 0; }
-      .header img { max-width: 260px; }
-      .header-subtitle { margin-top: 4px; font-size: 1.1em; color: #33566C; }
-
-      /* Buttons (light blue) */
-      .stButton > button {
-        border-radius: 999px;
-        font-size: 14px;
-        font-weight: 700;
-        background-color: #D7F3F9 !important;
-        color: #01293D !important;
-        border: 1px solid #BFE7F1 !important;
-        padding: 8px 22px;
-        cursor: pointer;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.06);
-        transition: background-color 0.2s ease, border-color 0.2s ease;
-      }
-      .stButton > button:hover {
-        background-color: #C6EDF6 !important;
-        border-color: #AEE0EC !important;
-      }
-
-      /* Secondary button wrapper */
-      .secondary-btn .stButton > button {
-        background-color: #FFFFFF !important;
-        color: #01293D !important;
-        border: 1px solid #D0D7DE !important;
-        box-shadow: none !important;
-      }
-      .secondary-btn .stButton > button:hover {
-        background-color: #F5F7FA !important;
-      }
-
-      /* Dashboard cards */
-      .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 24px;
-        margin-top: 10px;
-      }
-      .card {
-        background: #FFFFFF;
-        border-radius: 22px;
-        padding: 20px 20px 16px 20px;
-        box-shadow: 0 18px 40px rgba(1,41,61,0.06);
-        border: 1px solid #E5E9F0;
-        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-      }
-      .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 24px 60px rgba(1,41,61,0.09);
-        border-color: #D0D7DE;
-      }
-
-      /* Icon sizing in cards */
-      .card-icon {
-        font-size: 28px;
-        color: #01293D;
-        margin-bottom: 8px;
-        line-height: 1;
-      }
-
-      /* ✅ FIX: Force Material Icons font in Streamlit (prevents showing "insights" as text) */
-      .material-icons-outlined {
-        font-family: 'Material Icons Outlined' !important;
-        font-weight: normal !important;
-        font-style: normal !important;
-        font-size: 28px;
-        line-height: 1;
-        letter-spacing: normal;
-        text-transform: none;
-        display: inline-block;
-        white-space: nowrap;
-        word-wrap: normal;
-        direction: ltr;
-        -webkit-font-feature-settings: 'liga';
-        -webkit-font-smoothing: antialiased;
-      }
-
-      .card-title {
-        font-size: 1.1em;
-        font-weight: 700;
-        margin-bottom: 4px;
-      }
-      .card-body {
-        font-size: 0.95em;
-        color: #355067;
-        margin-bottom: 12px;
-      }
-
-      .footer {
-        text-align: center;
-        padding: 20px;
-        font-size: 0.9em;
-        color: #01293D;
-      }
-    </style>
     """,
     unsafe_allow_html=True
 )
+load_css("styles.css")
 
-# --- Header -----------------------------------------------------------------
+# --- Header ----------------------------------------------------------------
 
 st.markdown(
     """
@@ -197,49 +134,28 @@ if st.session_state.page == "dashboard":
     st.markdown('<div class="dashboard-grid">', unsafe_allow_html=True)
 
     # 1) Controlling
-    st.markdown(
-        """
-        <div class="card">
-          <span class="material-icons-outlined card-icon">insights</span>
-          <div class="card-title">Controlling Report Analyzer</div>
-          <div class="card-body">
-            Overblik over ruter med ekstra tid og kundedeviation baseret på QuickNotes.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    card(
+        "Controlling Report Analyzer",
+        "Overblik over ruter med ekstra tid og kundedeviation baseret på QuickNotes.",
+        svg_icon("insights"),
     )
     if st.button("Åbn Controlling", key="open_controlling"):
         go("controlling")
 
     # 2) Solar Weekly
-    st.markdown(
-        """
-        <div class="card">
-          <span class="material-icons-outlined card-icon">calendar_month</span>
-          <div class="card-title">Solar Weekly Report</div>
-          <div class="card-body">
-            Upload ugens Solar-rapport og få et hurtigt overblik over performance og nøgletal.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    card(
+        "Solar Weekly Report",
+        "Upload ugens Solar-rapport og få et hurtigt overblik over performance og nøgletal.",
+        svg_icon("calendar"),
     )
     if st.button("Åbn Solar Weekly", key="open_solar_weekly"):
         go("solar_weekly")
 
     # 3) Overblik & noter
-    st.markdown(
-        """
-        <div class="card">
-          <span class="material-icons-outlined card-icon">sticky_note_2</span>
-          <div class="card-title">Overblik &amp; noter</div>
-          <div class="card-body">
-            Skriv noter, instrukser og hjælpeartikler til teamet. Kan eksporteres/importeres som JSON.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    card(
+        "Overblik &amp; noter",
+        "Skriv noter, instrukser og hjælpeartikler til teamet. Kan eksporteres/importeres som JSON.",
+        svg_icon("note"),
     )
     if st.button("Åbn Overblik & noter", key="open_overviewnotes"):
         go("overviewnotes")
