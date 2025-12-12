@@ -30,11 +30,12 @@ st.set_page_config(
 
 st.markdown(
     """
-    <!-- Import Open Sans and Material Icons from Google Fonts -->
+    <!-- Import Open Sans and Material Icons (Outlined) from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons:outlined" rel="stylesheet">
 
     <style>
+      /* Typography */
       body, .main, p, li, .stMarkdown {
         font-family: 'Open Sans', sans-serif;
         font-size: 15px;
@@ -50,6 +51,7 @@ st.markdown(
       h2 { font-size: 2em; color: #003F63; }
       h3 { font-size: 1.5em; color: #01293D; }
 
+      /* Header */
       .header { text-align: center; padding: 10px 0 30px 0; }
       .header img { max-width: 260px; }
       .header-subtitle { margin-top: 4px; font-size: 1.1em; color: #33566C; }
@@ -104,12 +106,29 @@ st.markdown(
         border-color: #D0D7DE;
       }
 
-      /* Material icon inside cards (must use the span class) */
+      /* Icon sizing in cards */
       .card-icon {
         font-size: 28px;
         color: #01293D;
         margin-bottom: 8px;
         line-height: 1;
+      }
+
+      /* ✅ FIX: Force Material Icons font in Streamlit (prevents showing "insights" as text) */
+      .material-icons-outlined {
+        font-family: 'Material Icons Outlined' !important;
+        font-weight: normal !important;
+        font-style: normal !important;
+        font-size: 28px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
       }
 
       .card-title {
