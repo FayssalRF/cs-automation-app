@@ -1,0 +1,97 @@
+/* styles.css */
+
+body, .main, p, li, .stMarkdown {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #01293D;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.header { text-align: center; padding: 10px 0 30px 0; }
+.header img { max-width: 260px; }
+.header-subtitle { margin-top: 4px; font-size: 1.1em; color: #33566C; }
+
+/* Buttons (light blue) */
+.stButton > button {
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  background-color: #D7F3F9 !important;
+  color: #01293D !important;
+  border: 1px solid #BFE7F1 !important;
+  padding: 8px 22px;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.stButton > button:hover {
+  background-color: #C6EDF6 !important;
+  border-color: #AEE0EC !important;
+}
+
+/* Secondary button wrapper */
+.secondary-btn .stButton > button {
+  background-color: #FFFFFF !important;
+  color: #01293D !important;
+  border: 1px solid #D0D7DE !important;
+  box-shadow: none !important;
+}
+.secondary-btn .stButton > button:hover {
+  background-color: #F5F7FA !important;
+}
+
+/* Dashboard cards */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 10px;
+}
+
+.card {
+  background: #FFFFFF;
+  border-radius: 22px;
+  padding: 20px 20px 16px 20px;
+  box-shadow: 0 18px 40px rgba(1,41,61,0.06);
+  border: 1px solid #E5E9F0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 60px rgba(1,41,61,0.09);
+  border-color: #D0D7DE;
+}
+
+.card-title {
+  font-size: 1.1em;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.card-body {
+  font-size: 0.95em;
+  color: #355067;
+  margin-bottom: 12px;
+}
+
+/* SVG icon in cards */
+.card-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+  color: #01293D;
+}
+
+.footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.9em;
+  color: #01293D;
+}
